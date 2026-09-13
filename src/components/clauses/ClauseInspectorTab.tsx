@@ -80,6 +80,7 @@ export function ClauseInspectorTab({ clauses = [] }: ClauseInspectorTabProps) {
               placeholder="Search clauses, terms, numbers, or topics..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Search and filter clauses by topic, phrase, or section"
               className="w-full pl-10 pr-4 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent bg-slate-50/50"
             />
           </div>
@@ -153,7 +154,8 @@ export function ClauseInspectorTab({ clauses = [] }: ClauseInspectorTabProps) {
             }
             setExpandedIds(next);
           }}
-          className="text-blue-600 hover:underline font-semibold"
+          aria-label={Object.keys(expandedIds).length === clauses.length ? 'Collapse all clause details' : 'Expand all clause details'}
+          className="text-blue-600 hover:underline font-semibold focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none rounded"
         >
           {Object.keys(expandedIds).length === clauses.length ? 'Collapse All' : 'Expand All'}
         </button>
@@ -184,8 +186,18 @@ export function ClauseInspectorTab({ clauses = [] }: ClauseInspectorTabProps) {
               >
                 {/* Header Row */}
                 <div
+                  role="button"
+                  tabIndex={0}
+                  aria-expanded={isExpanded}
+                  aria-controls={`clause-details-${clause.id}`}
                   onClick={() => toggleExpand(clause.id)}
-                  className="p-5 cursor-pointer flex items-start justify-between gap-4 select-none hover:bg-slate-50/60 rounded-2xl transition-colors"
+                  onKeyDown={(e) => {
+                    if (e.key === ' ' || e.key === 'Enter') {
+                      e.preventDefault();
+                      toggleExpand(clause.id);
+                    }
+                  }}
+                  className="p-5 cursor-pointer flex items-start justify-between gap-4 select-none hover:bg-slate-50/60 rounded-2xl transition-colors focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none"
                 >
                   <div className="space-y-2 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -195,7 +207,7 @@ export function ClauseInspectorTab({ clauses = [] }: ClauseInspectorTabProps) {
                       {/* Source/Section */}
                       {clause.source && (
                         <span className="inline-flex items-center gap-1 text-[11px] font-mono font-semibold text-slate-700 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md">
-                          <FileText className="w-3 h-3 text-slate-500" />
+                          <FileText className="w-3 h-3 text-slate-500" aria-hidden="true" />
                           {clause.source}
                         </span>
                       )}
@@ -224,16 +236,19 @@ export function ClauseInspectorTab({ clauses = [] }: ClauseInspectorTabProps) {
                       {isExpanded ? 'Hide details' : 'View full text'}
                     </span>
                     {isExpanded ? (
-                      <ChevronUp className="w-5 h-5 text-slate-600" />
+                      <ChevronUp className="w-5 h-5 text-slate-600" aria-hidden="true" />
                     ) : (
-                      <ChevronDown className="w-5 h-5 text-slate-600" />
+                      <ChevronDown className="w-5 h-5 text-slate-600" aria-hidden="true" />
                     )}
                   </div>
                 </div>
 
                 {/* Expanded Details: Source Text & Why It Matters */}
                 {isExpanded && (
-                  <div className="px-5 pb-5 pt-2 border-t border-slate-100 space-y-4 text-xs animate-in fade-in duration-150">
+                  <div
+                    id={`clause-details-${clause.id}`}
+                    className="px-5 pb-5 pt-2 border-t border-slate-100 space-y-4 text-xs animate-in fade-in duration-150"
+                  >
                     {/* Why It Matters */}
                     {clause.practicalImplications && (
                       <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/70">

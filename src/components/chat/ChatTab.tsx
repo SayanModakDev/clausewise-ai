@@ -281,9 +281,13 @@ export function ChatTab({
 
         {/* Loading Card State */}
         {isLoading && (
-          <div className="bg-white rounded-2xl border border-blue-200 p-6 shadow-xs space-y-3 animate-in fade-in duration-150">
+          <div
+            role="status"
+            aria-live="polite"
+            className="bg-white rounded-2xl border border-blue-200 p-6 shadow-xs space-y-3 animate-in fade-in duration-150"
+          >
             <div className="flex items-center gap-3">
-              <div className="w-7 h-7 rounded-full border-2 border-blue-600 border-t-transparent animate-spin" />
+              <div className="w-7 h-7 rounded-full border-2 border-blue-600 border-t-transparent animate-spin" aria-hidden="true" />
               <div>
                 <p className="text-xs font-bold text-slate-900">
                   Scanning contract and verifying citations...
@@ -293,14 +297,18 @@ export function ChatTab({
                 </p>
               </div>
             </div>
-            <div className="h-10 bg-slate-100 rounded-lg animate-pulse" />
+            <div className="h-10 bg-slate-100 rounded-lg animate-pulse" aria-hidden="true" />
           </div>
         )}
 
         {/* Error Alert */}
         {error && (
-          <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-start gap-3 shadow-xs">
-            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+          <div
+            role="alert"
+            aria-live="assertive"
+            className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-start gap-3 shadow-xs"
+          >
+            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" aria-hidden="true" />
             <div>
               <span className="font-bold">Query Error:</span> {error}
             </div>
@@ -327,6 +335,7 @@ export function ChatTab({
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="Ask a question about this agreement (e.g. 'Can this agreement be terminated early?')..."
               disabled={isLoading}
+              aria-label="Ask a question about this contract document"
               className="w-full px-4 py-3 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent bg-slate-50/50 disabled:opacity-50"
             />
           </div>
@@ -334,24 +343,25 @@ export function ChatTab({
           <button
             type="submit"
             disabled={isLoading || !inputValue.trim()}
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-xs disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-xs disabled:opacity-50 disabled:cursor-not-allowed shrink-0 focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:outline-none"
+            aria-label="Submit question to contract"
           >
             {isLoading ? (
               <>
-                <RefreshCw className="w-4 h-4 animate-spin" />
+                <RefreshCw className="w-4 h-4 animate-spin" aria-hidden="true" />
                 <span>Checking...</span>
               </>
             ) : (
               <>
-                <Send className="w-4 h-4" />
+                <Send className="w-4 h-4" aria-hidden="true" />
                 <span>Ask Document</span>
               </>
             )}
           </button>
         </form>
 
-        <p className="text-[11px] text-slate-400 text-center flex items-center justify-center gap-1">
-          <AlertCircle className="w-3.5 h-3.5 text-slate-400" />
+        <p className="text-[11px] text-slate-500 text-center flex items-center justify-center gap-1.5">
+          <AlertCircle className="w-3.5 h-3.5 text-slate-500 shrink-0" aria-hidden="true" />
           <span>
             Answers are grounded strictly in the uploaded document. If terms are not in the contract, absence is explicitly reported.
           </span>

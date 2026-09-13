@@ -175,28 +175,42 @@ export function Workspace() {
             </div>
 
             {/* 5-Tab Navigation Bar */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-1.5 shadow-xs flex items-center gap-1 overflow-x-auto no-print">
+            <div
+              role="tablist"
+              aria-label="Document analysis sections"
+              className="bg-white rounded-2xl border border-slate-200 p-1.5 shadow-xs flex items-center gap-1 overflow-x-auto no-print"
+            >
               <button
+                role="tab"
+                id="tab-overview"
+                aria-selected={activeTab === 'OVERVIEW'}
+                aria-controls="panel-overview"
+                tabIndex={activeTab === 'OVERVIEW' ? 0 : -1}
                 onClick={() => setActiveTab('OVERVIEW')}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:outline-none ${
                   activeTab === 'OVERVIEW'
                     ? 'bg-slate-900 text-white shadow-xs'
                     : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
-                <FileText className="w-3.5 h-3.5" />
+                <FileText className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>Overview</span>
               </button>
 
               <button
+                role="tab"
+                id="tab-clauses"
+                aria-selected={activeTab === 'CLAUSES'}
+                aria-controls="panel-clauses"
+                tabIndex={activeTab === 'CLAUSES' ? 0 : -1}
                 onClick={() => setActiveTab('CLAUSES')}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:outline-none ${
                   activeTab === 'CLAUSES'
                     ? 'bg-slate-900 text-white shadow-xs'
                     : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
-                <Search className="w-3.5 h-3.5" />
+                <Search className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>Clauses</span>
                 {reviewCount > 0 && (
                   <span
@@ -212,44 +226,65 @@ export function Workspace() {
               </button>
 
               <button
+                role="tab"
+                id="tab-ask"
+                aria-selected={activeTab === 'ASK'}
+                aria-controls="panel-ask"
+                tabIndex={activeTab === 'ASK' ? 0 : -1}
                 onClick={() => setActiveTab('ASK')}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:outline-none ${
                   activeTab === 'ASK'
                     ? 'bg-slate-900 text-white shadow-xs'
                     : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
-                <MessageSquare className="w-3.5 h-3.5" />
+                <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>Ask</span>
               </button>
 
               <button
+                role="tab"
+                id="tab-compare"
+                aria-selected={activeTab === 'COMPARE'}
+                aria-controls="panel-compare"
+                tabIndex={activeTab === 'COMPARE' ? 0 : -1}
                 onClick={() => setActiveTab('COMPARE')}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:outline-none ${
                   activeTab === 'COMPARE'
                     ? 'bg-slate-900 text-white shadow-xs'
                     : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
-                <GitCompare className="w-3.5 h-3.5" />
+                <GitCompare className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>Compare</span>
               </button>
 
               <button
+                role="tab"
+                id="tab-action-plan"
+                aria-selected={activeTab === 'ACTION_PLAN'}
+                aria-controls="panel-action-plan"
+                tabIndex={activeTab === 'ACTION_PLAN' ? 0 : -1}
                 onClick={() => setActiveTab('ACTION_PLAN')}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:outline-none ${
                   activeTab === 'ACTION_PLAN'
                     ? 'bg-slate-900 text-white shadow-xs'
                     : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
-                <CheckCircle className="w-3.5 h-3.5" />
+                <CheckCircle className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>Action Plan</span>
               </button>
             </div>
 
             {/* Tab Views */}
-            <div className="transition-all duration-150">
+            <div
+              role="tabpanel"
+              id={`panel-${activeTab.toLowerCase().replace('_', '-')}`}
+              aria-labelledby={`tab-${activeTab.toLowerCase().replace('_', '-')}`}
+              tabIndex={0}
+              className="transition-all duration-150 focus-visible:outline-none"
+            >
               {activeTab === 'OVERVIEW' && analysis.overview && (
                 <OverviewTab
                   overview={analysis.overview}
@@ -292,7 +327,12 @@ export function Workspace() {
         )}
       </main>
 
-      {/* Footer with Persistent Legal Notice */}
+      {/* Screen Reader Live Loading Announcement */}
+      <div role="status" aria-live="polite" className="sr-only">
+        {isAnalyzing ? 'Analyzing contract document with ClauseWise AI. Please wait.' : ''}
+      </div>
+
+      {/* Footer with Persistent Legal Notice & Truthful Privacy Disclosure */}
       <footer className="mt-auto border-t border-slate-200 bg-white py-6 px-4 text-center text-xs text-slate-500 no-print">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
@@ -300,8 +340,8 @@ export function Workspace() {
             <span>—</span>
             <span>Understand the document before you sign it.</span>
           </div>
-          <p className="text-[11px] text-slate-400">
-            Informational assistance only. Not legal advice. Grounded by Gemini 3.8 Flash.
+          <p className="text-[11px] text-slate-500 max-w-xl text-center sm:text-right leading-relaxed">
+            Informational assistance only. Not legal advice. Documents are transmitted to Google Gemini for AI analysis and may be temporarily retained by the processing service. ClauseWise does not maintain its own document database.
           </p>
         </div>
       </footer>

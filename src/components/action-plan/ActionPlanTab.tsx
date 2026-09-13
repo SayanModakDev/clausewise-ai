@@ -99,16 +99,17 @@ export function ActionPlanTab({
         <div className="flex items-center gap-2 shrink-0 no-print">
           <button
             onClick={handleCopyQuestions}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 transition-colors shadow-xs"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 transition-colors shadow-xs focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:outline-none"
+            aria-label="Copy attorney discussion questions to clipboard"
           >
             {copied ? (
               <>
-                <Check className="w-4 h-4 text-emerald-600" />
+                <Check className="w-4 h-4 text-emerald-600" aria-hidden="true" />
                 <span className="text-emerald-700">Copied!</span>
               </>
             ) : (
               <>
-                <Copy className="w-4 h-4 text-slate-500" />
+                <Copy className="w-4 h-4 text-slate-500" aria-hidden="true" />
                 <span>Copy Questions</span>
               </>
             )}
@@ -116,9 +117,10 @@ export function ActionPlanTab({
 
           <button
             onClick={handlePrint}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-colors shadow-xs"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-colors shadow-xs focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:outline-none"
+            aria-label="Print lawyer preparation packet"
           >
-            <Printer className="w-4 h-4" />
+            <Printer className="w-4 h-4" aria-hidden="true" />
             <span>Print Lawyer Packet</span>
           </button>
         </div>
@@ -212,23 +214,29 @@ export function ActionPlanTab({
               return (
                 <div
                   key={item.id}
+                  role="checkbox"
+                  aria-checked={isDone}
+                  tabIndex={0}
                   onClick={() => toggleComplete(item.id)}
-                  className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer select-none transition-all ${
+                  onKeyDown={(e) => {
+                    if (e.key === ' ' || e.key === 'Enter') {
+                      e.preventDefault();
+                      toggleComplete(item.id);
+                    }
+                  }}
+                  className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer select-none transition-all focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:outline-none ${
                     isDone
                       ? 'bg-slate-50 border-slate-200 opacity-70'
                       : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/40 shadow-xs'
                   }`}
                 >
-                  <button
-                    type="button"
-                    className="mt-0.5 text-slate-400 hover:text-emerald-600 transition-colors shrink-0"
-                  >
+                  <div className="mt-0.5 text-slate-400 shrink-0" aria-hidden="true">
                     {isDone ? (
                       <CheckSquare className="w-4 h-4 text-emerald-600" />
                     ) : (
                       <Square className="w-4 h-4 text-slate-400" />
                     )}
-                  </button>
+                  </div>
 
                   <div className="flex-1 min-w-0">
                     <p

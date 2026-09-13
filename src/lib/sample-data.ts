@@ -157,7 +157,7 @@ export const SAMPLE_DOCUMENT_ANALYSIS_DATA: DocumentAnalysisData = {
     'Confirm expense pre-approval workflow for travel exceeding $100.',
   ],
   questionsForProfessional: [
-    'Is Section 7.2\'s non-compete restriction enforceable against an independent contractor under California law (Cal. Bus. & Prof. Code § 16600)?',
+    'What is counsel\'s legal evaluation of Section 7.2\'s non-compete restriction against an independent contractor under California law (Cal. Bus. & Prof. Code § 16600)?',
     'Does the 12-month liability cap in Section 6.1 adequately protect against third-party indemnification claims under Section 6.2?',
     'Does the "work made for hire" language in Section 4.1 correctly carve out pre-existing toolkits without title clouding?',
     'Should the JAMS arbitration clause include mandatory good-faith executive escalation before formal filing?',
@@ -319,7 +319,7 @@ export const SAMPLE_INITIAL_ANALYSIS: DocumentAnalysisResult = {
     attorneyDiscussionQuestions: [
       {
         category: 'Restrictive Covenants',
-        question: 'Is Section 7.2\'s non-compete restriction enforceable against an independent contractor under California law (Cal. Bus. & Prof. Code § 16600)?',
+        question: 'What is counsel\'s legal evaluation of Section 7.2\'s non-compete restriction against an independent contractor under California law (Cal. Bus. & Prof. Code § 16600)?',
         context: 'Agreement specifies California governing law, where post-engagement covenants are heavily restricted.',
       },
       {

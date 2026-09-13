@@ -59,6 +59,13 @@ export async function processUploadedFile(file: File): Promise<ProcessedUpload> 
 
   const buffer = Buffer.from(await file.arrayBuffer());
 
+  // Strict PDF validation: Verify PDF magic bytes (%PDF-) to reject disguised binary files
+  if (isPdf) {
+    if (buffer.length < 5 || buffer.toString('ascii', 0, 5) !== '%PDF-') {
+      throw new Error('Invalid PDF document. The file header does not match standard PDF specifications.');
+    }
+  }
+
   // Plain text processing
   if (isTxt) {
     const textContent = buffer.toString('utf-8');
@@ -596,7 +603,17 @@ export async function compareDocuments(
   }
 
   const responseText = response.text || '{}';
-  const cleaned = responseText.replace(/```json\n?|\n?```/g, '').trim();
-  const parsed = JSON.parse(cleaned);
-  return smartComparisonResultSchema.parse(parsed);
+  let parsed: unknown;
+  try {
+    const cleaned = responseText.replace(/```json\n?|\n?```/g, '').trim();
+    parsed = JSON.parse(cleaned);
+  } catch {
+    throw new Error('AI comparison response could not be parsed as structured JSON.');
+  }
+
+  try {
+    return smartComparisonResultSchema.parse(parsed);
+  } catch {
+    throw new Error('AI comparison response did not conform to the expected comparison schema.');
+  }
 }

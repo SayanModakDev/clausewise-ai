@@ -69,11 +69,29 @@ export async function POST(req: NextRequest) {
       comparison,
     });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Failed to compare documents.';
-    console.error('Document comparison error:', message);
-    return NextResponse.json(
-      { error: message || 'An unexpected error occurred during document comparison.' },
-      { status: 500 }
-    );
+    const rawMessage = err instanceof Error ? err.message : String(err);
+    console.error('Document comparison error:', rawMessage);
+
+    let userMessage = 'An unexpected error occurred during document comparison. Please try again.';
+    let statusCode = 500;
+
+    if (
+      rawMessage.includes('Both Document A and Document B') ||
+      rawMessage.includes('empty') ||
+      rawMessage.includes('Unsupported file format') ||
+      rawMessage.includes('limit') ||
+      rawMessage.includes('Invalid')
+    ) {
+      userMessage = rawMessage;
+      statusCode = 400;
+    } else if (rawMessage.includes('RESOURCE_EXHAUSTED') || rawMessage.includes('429')) {
+      userMessage = 'The AI comparison engine is currently experiencing high demand. Please try again in a few moments.';
+      statusCode = 429;
+    } else if (rawMessage.includes('API key') || rawMessage.includes('GEMINI_API_KEY')) {
+      userMessage = 'AI service authentication error. Please contact the administrator.';
+      statusCode = 500;
+    }
+
+    return NextResponse.json({ error: userMessage }, { status: statusCode });
   }
 }

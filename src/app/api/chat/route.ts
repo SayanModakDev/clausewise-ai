@@ -47,11 +47,23 @@ export async function POST(req: NextRequest) {
       citations: result.citations,
     });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Failed to process question.';
-    console.error('Document Q&A error:', message);
-    return NextResponse.json(
-      { error: message || 'An unexpected error occurred during Q&A processing.' },
-      { status: 500 }
-    );
+    const rawMessage = err instanceof Error ? err.message : String(err);
+    console.error('Document Q&A error:', rawMessage);
+
+    let userMessage = 'An unexpected error occurred during Q&A processing. Please try again.';
+    let statusCode = 500;
+
+    if (rawMessage.includes('required') || rawMessage.includes('empty')) {
+      userMessage = rawMessage;
+      statusCode = 400;
+    } else if (rawMessage.includes('RESOURCE_EXHAUSTED') || rawMessage.includes('429')) {
+      userMessage = 'The AI engine is currently experiencing high demand. Please try again in a few moments.';
+      statusCode = 429;
+    } else if (rawMessage.includes('API key') || rawMessage.includes('GEMINI_API_KEY')) {
+      userMessage = 'AI service authentication error. Please contact the administrator.';
+      statusCode = 500;
+    }
+
+    return NextResponse.json({ error: userMessage }, { status: statusCode });
   }
 }

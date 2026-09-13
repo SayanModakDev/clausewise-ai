@@ -271,7 +271,7 @@ export function CompareTab({ currentUpload }: CompareTabProps) {
             {hasDocA ? (
               <div className="p-3 bg-white rounded-lg border border-slate-200 flex items-center justify-between gap-3 shadow-xs">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <FileCheck2 className="w-5 h-5 text-blue-600 shrink-0" />
+                  <FileCheck2 className="w-5 h-5 text-blue-600 shrink-0" aria-hidden="true" />
                   <div className="min-w-0">
                     <p className="text-xs font-bold text-slate-900 truncate">{docAName}</p>
                     <p className="text-[11px] text-slate-500">{docASize}</p>
@@ -281,17 +281,27 @@ export function CompareTab({ currentUpload }: CompareTabProps) {
                   type="button"
                   onClick={() => fileInputARef.current?.click()}
                   disabled={isComparing}
-                  className="text-xs font-semibold text-blue-600 hover:underline shrink-0"
+                  aria-label="Change original baseline document"
+                  className="text-xs font-semibold text-blue-600 hover:underline shrink-0 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none rounded"
                 >
                   Change
                 </button>
               </div>
             ) : (
               <div
+                role="button"
+                tabIndex={0}
+                aria-label="Select Original Document (Document A)"
+                onKeyDown={(e) => {
+                  if (e.key === ' ' || e.key === 'Enter') {
+                    e.preventDefault();
+                    fileInputARef.current?.click();
+                  }
+                }}
                 onClick={() => fileInputARef.current?.click()}
-                className="border-2 border-dashed border-slate-300 hover:border-slate-400 p-6 rounded-lg text-center cursor-pointer bg-white transition-colors"
+                className="border-2 border-dashed border-slate-300 hover:border-slate-400 p-6 rounded-lg text-center cursor-pointer bg-white transition-colors focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none"
               >
-                <UploadCloud className="w-6 h-6 text-slate-400 mx-auto mb-1.5" />
+                <UploadCloud className="w-6 h-6 text-slate-400 mx-auto mb-1.5" aria-hidden="true" />
                 <p className="text-xs font-bold text-slate-800">Select Original Document</p>
                 <p className="text-[11px] text-slate-500 mt-0.5">PDF or TXT up to 10MB</p>
               </div>
@@ -302,7 +312,7 @@ export function CompareTab({ currentUpload }: CompareTabProps) {
           <div className="p-5 rounded-xl border border-slate-200 bg-slate-50/60 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">
+                <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]" aria-hidden="true">
                   B
                 </span>
                 Revised Document (New Version)
@@ -319,13 +329,14 @@ export function CompareTab({ currentUpload }: CompareTabProps) {
                 }
               }}
               disabled={isComparing}
+              aria-label="Upload revised contract document"
               className="hidden"
             />
 
             {hasDocB && fileB ? (
               <div className="p-3 bg-white rounded-lg border border-slate-200 flex items-center justify-between gap-3 shadow-xs">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <FileCheck2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                  <FileCheck2 className="w-5 h-5 text-emerald-600 shrink-0" aria-hidden="true" />
                   <div className="min-w-0">
                     <p className="text-xs font-bold text-slate-900 truncate">{fileB.name}</p>
                     <p className="text-[11px] text-slate-500">{formatFileSize(fileB.size)}</p>
@@ -336,7 +347,8 @@ export function CompareTab({ currentUpload }: CompareTabProps) {
                     type="button"
                     onClick={() => fileInputBRef.current?.click()}
                     disabled={isComparing}
-                    className="text-xs font-semibold text-blue-600 hover:underline shrink-0 mr-2"
+                    aria-label="Change revised document"
+                    className="text-xs font-semibold text-blue-600 hover:underline shrink-0 mr-2 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none rounded"
                   >
                     Change
                   </button>
@@ -346,18 +358,28 @@ export function CompareTab({ currentUpload }: CompareTabProps) {
                       setFileB(null);
                       if (fileInputBRef.current) fileInputBRef.current.value = '';
                     }}
-                    className="text-slate-400 hover:text-slate-600 p-1"
+                    aria-label="Remove revised document"
+                    className="text-slate-400 hover:text-slate-600 p-1 rounded focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:outline-none"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-4 h-4" aria-hidden="true" />
                   </button>
                 </div>
               </div>
             ) : (
               <div
+                role="button"
+                tabIndex={0}
+                aria-label="Select Revised Document (Document B)"
+                onKeyDown={(e) => {
+                  if (e.key === ' ' || e.key === 'Enter') {
+                    e.preventDefault();
+                    fileInputBRef.current?.click();
+                  }
+                }}
                 onClick={() => fileInputBRef.current?.click()}
-                className="border-2 border-dashed border-slate-300 hover:border-slate-400 p-6 rounded-lg text-center cursor-pointer bg-white transition-colors"
+                className="border-2 border-dashed border-slate-300 hover:border-slate-400 p-6 rounded-lg text-center cursor-pointer bg-white transition-colors focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none"
               >
-                <UploadCloud className="w-6 h-6 text-slate-400 mx-auto mb-1.5" />
+                <UploadCloud className="w-6 h-6 text-slate-400 mx-auto mb-1.5" aria-hidden="true" />
                 <p className="text-xs font-bold text-slate-800">Select Revised Document</p>
                 <p className="text-[11px] text-slate-500 mt-0.5">PDF or TXT up to 10MB</p>
               </div>
@@ -375,16 +397,16 @@ export function CompareTab({ currentUpload }: CompareTabProps) {
             type="button"
             onClick={() => handleRunComparison()}
             disabled={!hasDocA || !hasDocB || isComparing}
-            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-xs disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-xs disabled:opacity-50 disabled:cursor-not-allowed shrink-0 focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:outline-none"
           >
             {isComparing ? (
               <>
-                <RefreshCw className="w-4 h-4 animate-spin" />
+                <RefreshCw className="w-4 h-4 animate-spin" aria-hidden="true" />
                 <span>Comparing Versions...</span>
               </>
             ) : (
               <>
-                <GitCompare className="w-4 h-4" />
+                <GitCompare className="w-4 h-4" aria-hidden="true" />
                 <span>Compare Versions</span>
               </>
             )}
@@ -394,17 +416,25 @@ export function CompareTab({ currentUpload }: CompareTabProps) {
 
       {/* Error Banner */}
       {error && (
-        <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-start gap-3 shadow-xs">
-          <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-start gap-3 shadow-xs"
+        >
+          <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" aria-hidden="true" />
           <div className="flex-1">
-            <span className="font-bold">Comparison Failed:</span> {error}
+            <span className="font-bold">Comparison Notice:</span> {error}
           </div>
         </div>
       )}
 
       {/* Multi-Stage Loading State */}
       {isComparing && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-xs space-y-6 animate-in fade-in duration-150">
+        <div
+          role="status"
+          aria-live="polite"
+          className="bg-white rounded-2xl border border-slate-200 p-8 shadow-xs space-y-6 animate-in fade-in duration-150"
+        >
           <div className="flex flex-col items-center justify-center text-center space-y-4">
             <div className="w-14 h-14 rounded-full border-4 border-slate-100 border-t-blue-600 animate-spin" />
             <div>
@@ -422,11 +452,11 @@ export function CompareTab({ currentUpload }: CompareTabProps) {
                 return (
                   <div key={idx} className="flex items-center gap-2.5 text-xs">
                     {isDone ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" aria-hidden="true" />
                     ) : isCurrent ? (
-                      <div className="w-4 h-4 rounded-full border-2 border-blue-600 border-t-transparent animate-spin shrink-0" />
+                      <div className="w-4 h-4 rounded-full border-2 border-blue-600 border-t-transparent animate-spin shrink-0" aria-hidden="true" />
                     ) : (
-                      <div className="w-4 h-4 rounded-full border border-slate-300 shrink-0" />
+                      <div className="w-4 h-4 rounded-full border border-slate-300 shrink-0" aria-hidden="true" />
                     )}
                     <span
                       className={`${

@@ -68,6 +68,9 @@ export async function POST(req: NextRequest) {
     } else if (rawMessage.includes('RESOURCE_EXHAUSTED') || rawMessage.includes('429')) {
       userMessage = 'The AI engine is currently experiencing high demand. Please try again shortly.';
       statusCode = 429;
+    } else if (rawMessage.includes('API key') || rawMessage.includes('GEMINI_API_KEY')) {
+      userMessage = 'AI service authentication error. Please contact the administrator.';
+      statusCode = 500;
     }
 
     return NextResponse.json({ error: userMessage }, { status: statusCode });
