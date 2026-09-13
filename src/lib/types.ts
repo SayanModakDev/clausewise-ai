@@ -1,5 +1,58 @@
 export type AttentionLevel = 'INFORMATIONAL' | 'IMPORTANT' | 'REVIEW';
 
+export interface ImportantDate {
+  label: string;
+  value: string;
+  source?: string;
+}
+
+export interface FinancialTermItem {
+  label: string;
+  value: string;
+  source?: string;
+}
+
+export interface LegalObligation {
+  party?: string;
+  obligation: string;
+  source?: string;
+}
+
+export interface LegalClause {
+  title: string;
+  source: string | null;
+  originalText: string;
+  plainLanguage: string;
+  attentionLevel: AttentionLevel;
+  whyItMatters: string;
+}
+
+/**
+ * Structured document-grounded legal analysis output from Gemini 3.8 Flash
+ */
+export interface DocumentAnalysisData {
+  documentType: string;
+  summary: string;
+  parties: string[];
+  importantDates: ImportantDate[];
+  financialTerms: FinancialTermItem[];
+  obligations: LegalObligation[];
+  clauses: LegalClause[];
+  itemsToClarify: string[];
+  questionsForProfessional: string[];
+}
+
+export interface DocumentMetadata {
+  id: string;
+  fileName: string;
+  fileUri?: string;
+  mimeType: string;
+  fileSize: number;
+  analyzedAt: string;
+  textContent?: string;
+}
+
+// Retain legacy interface aliases for UI view compatibility
 export interface DocumentParty {
   name: string;
   role: string;
@@ -91,6 +144,7 @@ export interface DocumentAnalysisResult {
   mimeType: string;
   fileSize: number;
   analyzedAt: string;
+  rawAnalysis?: DocumentAnalysisData;
   overview: DocumentOverview;
   clauses: ClauseItem[];
   actionPlan: ActionPlan;

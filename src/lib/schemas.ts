@@ -1,7 +1,153 @@
 import { z } from 'zod';
+import { Type } from '@google/genai';
 
 export const attentionLevelSchema = z.enum(['INFORMATIONAL', 'IMPORTANT', 'REVIEW']);
 
+export const importantDateSchema = z.object({
+  label: z.string(),
+  value: z.string(),
+  source: z.string().optional(),
+});
+
+export const financialTermItemSchema = z.object({
+  label: z.string(),
+  value: z.string(),
+  source: z.string().optional(),
+});
+
+export const legalObligationSchema = z.object({
+  party: z.string().optional(),
+  obligation: z.string(),
+  source: z.string().optional(),
+});
+
+export const legalClauseSchema = z.object({
+  title: z.string(),
+  source: z.string().nullable().default(null),
+  originalText: z.string(),
+  plainLanguage: z.string(),
+  attentionLevel: attentionLevelSchema,
+  whyItMatters: z.string(),
+});
+
+/**
+ * Standard structured document analysis Zod schema
+ */
+export const documentAnalysisDataSchema = z.object({
+  documentType: z.string(),
+  summary: z.string(),
+  parties: z.array(z.string()).default([]),
+  importantDates: z.array(importantDateSchema).default([]),
+  financialTerms: z.array(financialTermItemSchema).default([]),
+  obligations: z.array(legalObligationSchema).default([]),
+  clauses: z.array(legalClauseSchema).default([]),
+  itemsToClarify: z.array(z.string()).default([]),
+  questionsForProfessional: z.array(z.string()).default([]),
+});
+
+/**
+ * Native Gemini SDK Structured Output Schema for Document Analysis
+ */
+export const GEMINI_DOCUMENT_ANALYSIS_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    documentType: {
+      type: Type.STRING,
+      description: 'The type or title of the legal agreement (e.g., Non-Disclosure Agreement, Independent Consulting Agreement)',
+    },
+    summary: {
+      type: Type.STRING,
+      description: 'Comprehensive plain-language executive summary of the document and its core commitments',
+    },
+    parties: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
+      description: 'All identified contracting parties and their roles (e.g. "Apex Ventures Inc. (Company)", "Alex Mercer (Consultant)")',
+    },
+    importantDates: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          label: { type: Type.STRING, description: 'Date name, e.g. "Effective Date", "Initial Term Expiration", "Notice Period"' },
+          value: { type: Type.STRING, description: 'Exact date or duration verbatim from the contract' },
+          source: { type: Type.STRING, description: 'Source section or clause reference' },
+        },
+        required: ['label', 'value'],
+      },
+      description: 'Critical deadlines, effective dates, notice windows, and cure periods',
+    },
+    financialTerms: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          label: { type: Type.STRING, description: 'Payment item name, e.g. "Monthly Retainer", "Late Payment Interest"' },
+          value: { type: Type.STRING, description: 'Exact dollar amount, rate, or percentage verbatim from the contract' },
+          source: { type: Type.STRING, description: 'Source section reference' },
+        },
+        required: ['label', 'value'],
+      },
+      description: 'All compensation, fee, reimbursement, and penalty terms',
+    },
+    obligations: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          party: { type: Type.STRING, description: 'The party bound by this obligation' },
+          obligation: { type: Type.STRING, description: 'Plain-language explanation of what must be done or avoided' },
+          source: { type: Type.STRING, description: 'Source clause or section number' },
+        },
+        required: ['obligation'],
+      },
+      description: 'Core contractual duties, commitments, and restrictions for each party',
+    },
+    clauses: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          title: { type: Type.STRING, description: 'Descriptive title of the clause' },
+          source: { type: Type.STRING, nullable: true, description: 'Section number, paragraph, or page reference' },
+          originalText: { type: Type.STRING, description: 'Exact verbatim excerpt of the contract language' },
+          plainLanguage: { type: Type.STRING, description: 'Clear translation in simple, everyday language' },
+          attentionLevel: {
+            type: Type.STRING,
+            enum: ['INFORMATIONAL', 'IMPORTANT', 'REVIEW'],
+            description: 'INFORMATIONAL: standard boilerplate; IMPORTANT: core rights/payments; REVIEW: unilateral, liability caps, or non-competes',
+          },
+          whyItMatters: { type: Type.STRING, description: 'Practical meaning and consequences for the signer' },
+        },
+        required: ['title', 'originalText', 'plainLanguage', 'attentionLevel', 'whyItMatters'],
+      },
+      description: 'Categorized breakdown of substantive clauses in the agreement',
+    },
+    itemsToClarify: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
+      description: 'Ambiguities, potential traps, or items to verify before signing',
+    },
+    questionsForProfessional: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
+      description: 'Specific, high-value questions to discuss with an attorney',
+    },
+  },
+  required: [
+    'documentType',
+    'summary',
+    'parties',
+    'importantDates',
+    'financialTerms',
+    'obligations',
+    'clauses',
+    'itemsToClarify',
+    'questionsForProfessional',
+  ],
+};
+
+// Legacy schemas for backward-compatibility with other modules
 export const documentPartySchema = z.object({
   name: z.string(),
   role: z.string(),

@@ -1,5 +1,5 @@
 import 'server-only';
-import { ai, GEMINI_MODEL, withGeminiRetry } from './gemini';
+import { ai, GEMINI_CONFIG, withGeminiRetry } from './gemini';
 import {
   LEGAL_GUARDRAILS_SYSTEM_INSTRUCTION,
   DOCUMENT_ANALYSIS_PROMPT,
@@ -7,48 +7,60 @@ import {
   DOCUMENT_COMPARISON_PROMPT,
 } from './prompts';
 import {
-  fullAnalysisSchema,
+  documentAnalysisDataSchema,
+  GEMINI_DOCUMENT_ANALYSIS_SCHEMA,
   chatResponseSchema,
   comparisonResultSchema,
 } from '@/lib/schemas';
 import type {
+  DocumentAnalysisData,
   DocumentAnalysisResult,
   ChatCitation,
   DocumentComparisonResult,
   ProcessedUpload,
+  ClauseCategory,
 } from '@/lib/types';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
-const ALLOWED_MIME_TYPES = [
-  'application/pdf',
-  'text/plain',
-  'text/markdown',
-];
 
 type GenerateContentParamContents = Parameters<typeof ai.models.generateContent>[0]['contents'];
+type GenerateContentParamConfig = NonNullable<Parameters<typeof ai.models.generateContent>[0]['config']>;
+type ResponseSchemaParam = GenerateContentParamConfig['responseSchema'];
 
 /**
- * Validates uploaded file and prepares it for Gemini processing (via Files API or in-memory text).
+ * Validates uploaded file and prepares it for Gemini processing (via Files API for PDF or UTF-8 text).
+ * Rejects empty, oversized, or unsupported files with clear user-safe messages.
+ * Never logs full document contents.
  */
 export async function processUploadedFile(file: File): Promise<ProcessedUpload> {
-  if (file.size > MAX_FILE_SIZE_BYTES) {
-    throw new Error('File size exceeds the 10MB limit.');
+  if (!file || file.size === 0) {
+    throw new Error('The uploaded file is empty (0 bytes). Please upload a valid contract document.');
   }
 
-  const mimeType = file.type || (file.name.endsWith('.pdf') ? 'application/pdf' : 'text/plain');
+  if (file.size > MAX_FILE_SIZE_BYTES) {
+    throw new Error('File size exceeds the 10MB limit. Please provide a document under 10MB.');
+  }
 
-  if (!ALLOWED_MIME_TYPES.includes(mimeType) && !file.name.endsWith('.pdf') && !file.name.endsWith('.txt')) {
-    throw new Error('Invalid file type. Only PDF (.pdf) and plain text (.txt) files are supported.');
+  const fileNameLower = file.name.toLowerCase();
+  const isPdf = fileNameLower.endsWith('.pdf') || file.type === 'application/pdf';
+  const isTxt = fileNameLower.endsWith('.txt') || file.type === 'text/plain';
+
+  if (!isPdf && !isTxt) {
+    throw new Error('Unsupported file format. ClauseWise supports PDF (.pdf) and Plain Text (.txt) documents only.');
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
 
-  // For plain text, we can use both text content directly and/or Files API
-  if (mimeType === 'text/plain' || file.name.endsWith('.txt')) {
+  // Plain text processing
+  if (isTxt) {
     const textContent = buffer.toString('utf-8');
+    if (textContent.trim().length === 0) {
+      throw new Error('The uploaded text file contains no readable text content.');
+    }
+
     return {
       mimeType: 'text/plain',
       textContent,
@@ -57,7 +69,7 @@ export async function processUploadedFile(file: File): Promise<ProcessedUpload> 
     };
   }
 
-  // For PDF files, save temporarily and upload to Gemini Files API
+  // PDF processing via Gemini Files API
   const tempFilePath = path.join(
     os.tmpdir(),
     `clausewise_${Date.now()}_${Math.random().toString(36).substring(7)}.pdf`
@@ -80,19 +92,55 @@ export async function processUploadedFile(file: File): Promise<ProcessedUpload> 
       originalName: file.name,
       size: file.size,
     };
+  } catch (uploadErr: unknown) {
+    const msg = uploadErr instanceof Error ? uploadErr.message : String(uploadErr);
+    console.error('Gemini Files API upload error:', msg);
+    throw new Error('Failed to process and upload PDF document to Gemini. Please try again.');
   } finally {
     if (fs.existsSync(tempFilePath)) {
       try {
         fs.unlinkSync(tempFilePath);
       } catch {
-        // Ignore cleanup failure
+        // Ignore temporary file cleanup failure
       }
     }
   }
 }
 
 /**
- * Performs full legal analysis of a document using gemini-3.8-flash.
+ * Categorizes clause into standard legal categories based on title/content
+ */
+function inferClauseCategory(title: string, text: string): ClauseCategory {
+  const combined = `${title} ${text}`.toLowerCase();
+  if (combined.includes('terminat') || combined.includes('cancel') || combined.includes('cure period')) {
+    return 'Termination';
+  }
+  if (combined.includes('liabilit') || combined.includes('indemnif') || combined.includes('damages') || combined.includes('hold harmless')) {
+    return 'Liability & Indemnification';
+  }
+  if (combined.includes('intellectual property') || combined.includes('work made for hire') || combined.includes('patent') || combined.includes('copyright') || combined.includes('invention')) {
+    return 'Intellectual Property';
+  }
+  if (combined.includes('fee') || combined.includes('payment') || combined.includes('compensation') || combined.includes('invoice') || combined.includes('retainer') || combined.includes('interest')) {
+    return 'Payment & Fees';
+  }
+  if (combined.includes('confidential') || combined.includes('non-disclosure') || combined.includes('trade secret') || combined.includes('proprietary')) {
+    return 'Confidentiality';
+  }
+  if (combined.includes('governing law') || combined.includes('arbitrat') || combined.includes('jurisdiction') || combined.includes('dispute') || combined.includes('court')) {
+    return 'Governing Law & Dispute Resolution';
+  }
+  if (combined.includes('non-compete') || combined.includes('non-solicit') || combined.includes('restrictive covenant') || combined.includes('restraint')) {
+    return 'Non-Compete & Restrictive Covenants';
+  }
+  if (combined.includes('warrant') || combined.includes('disclaimer') || combined.includes('as is') || combined.includes('merchantability')) {
+    return 'Warranties & Disclaimers';
+  }
+  return 'General & Miscellaneous';
+}
+
+/**
+ * Performs full legal analysis of a document using Gemini 3.8 Flash structured output.
  */
 export async function analyzeDocument(
   upload: ProcessedUpload
@@ -116,11 +164,14 @@ export async function analyzeDocument(
 
   const response = await withGeminiRetry(async () => {
     return await ai.models.generateContent({
-      model: GEMINI_MODEL,
+      model: GEMINI_CONFIG.model,
       contents: contents as GenerateContentParamContents,
       config: {
         systemInstruction: LEGAL_GUARDRAILS_SYSTEM_INSTRUCTION,
         responseMimeType: 'application/json',
+        responseSchema: GEMINI_DOCUMENT_ANALYSIS_SCHEMA as ResponseSchemaParam,
+        temperature: GEMINI_CONFIG.temperature,
+        thinkingConfig: GEMINI_CONFIG.thinkingConfig,
       },
     });
   });
@@ -130,12 +181,104 @@ export async function analyzeDocument(
   try {
     parsedJson = JSON.parse(responseText);
   } catch {
-    // Attempt markdown json code block stripping if necessary
     const cleaned = responseText.replace(/```json\n?|\n?```/g, '').trim();
-    parsedJson = JSON.parse(cleaned);
+    try {
+      parsedJson = JSON.parse(cleaned);
+    } catch {
+      throw new Error('Gemini response could not be parsed as valid JSON.');
+    }
   }
 
-  const validated = fullAnalysisSchema.parse(parsedJson);
+  const rawAnalysis: DocumentAnalysisData = documentAnalysisDataSchema.parse(parsedJson);
+
+  // Derive counts for attention badges
+  let informationalCount = 0;
+  let importantCount = 0;
+  let reviewCount = 0;
+
+  const mappedClauses = rawAnalysis.clauses.map((c, idx) => {
+    if (c.attentionLevel === 'REVIEW') reviewCount++;
+    else if (c.attentionLevel === 'IMPORTANT') importantCount++;
+    else informationalCount++;
+
+    return {
+      id: `cl-${idx + 1}`,
+      title: c.title,
+      category: inferClauseCategory(c.title, c.originalText),
+      attentionLevel: c.attentionLevel,
+      plainExplanation: c.plainLanguage,
+      sourceQuote: c.originalText,
+      practicalImplications: c.whyItMatters,
+      suggestedQuestions: [
+        `How does this ${c.title} term compare to standard industry norms?`,
+        `Can this provision be revised to minimize potential risk before signing?`,
+      ],
+    };
+  });
+
+  const riskSummary =
+    reviewCount > 0
+      ? `Contains ${reviewCount} clause(s) requiring careful review (e.g., restrictive covenants, unilateral rights, or aggressive indemnities). We recommend discussing these specific items with a qualified attorney.`
+      : importantCount > 0
+      ? `Contains ${importantCount} important substantive obligation(s) regarding core commitments, intellectual property, or payments. Generally balanced, but verify all numbers and timelines.`
+      : 'Standard operational agreement composed predominantly of informational and customary commercial terms.';
+
+  const mappedOverview = {
+    title: rawAnalysis.documentType || upload.originalName,
+    documentType: rawAnalysis.documentType,
+    executiveSummary: rawAnalysis.summary,
+    parties: rawAnalysis.parties.map((p) => {
+      const parts = p.split(/[()]/).map((s) => s.trim()).filter(Boolean);
+      return {
+        name: parts[0] || p,
+        role: parts[1] || 'Contracting Party',
+      };
+    }),
+    keyDates: rawAnalysis.importantDates.map((d) => ({
+      label: d.label,
+      date: d.value,
+      description: d.source ? `Reference: ${d.source}` : 'Specified in agreement',
+    })),
+    financialTerms: rawAnalysis.financialTerms.map((f) => ({
+      label: f.label,
+      amountOrRate: f.value,
+      description: f.source ? `Reference: ${f.source}` : 'Payment condition',
+    })),
+    coreObligations: rawAnalysis.obligations.map((o) => ({
+      party: o.party || 'Signer',
+      obligation: o.obligation,
+    })),
+    riskProfile: {
+      summary: riskSummary,
+      informationalCount,
+      importantCount,
+      reviewCount,
+    },
+  };
+
+  const mappedActionPlan = {
+    highPriorityChecklist: rawAnalysis.itemsToClarify.map((item, idx) => ({
+      id: `chk-${idx + 1}`,
+      item,
+      reason: 'Item to clarify, verify, or negotiate before signing',
+      category: 'Pre-Signing Verification',
+      completed: false,
+    })),
+    attorneyDiscussionQuestions: rawAnalysis.questionsForProfessional.map((q) => ({
+      category: 'Attorney Review',
+      question: q,
+      context: 'Identified during automated legal document inspection',
+    })),
+    signingReadiness: {
+      assessment:
+        reviewCount > 0
+          ? 'Requires Legal Review Prior to Signing'
+          : importantCount > 0
+          ? 'Moderately Favorable with Verification Points'
+          : 'Ready for Administrative Review',
+      keyBlockers: rawAnalysis.itemsToClarify.slice(0, 3),
+    },
+  };
 
   return {
     documentId: `doc_${Date.now()}`,
@@ -144,14 +287,15 @@ export async function analyzeDocument(
     mimeType: upload.mimeType,
     fileSize: upload.size,
     analyzedAt: new Date().toISOString(),
-    overview: validated.overview,
-    clauses: validated.clauses,
-    actionPlan: validated.actionPlan,
+    rawAnalysis,
+    overview: mappedOverview,
+    clauses: mappedClauses,
+    actionPlan: mappedActionPlan,
   };
 }
 
 /**
- * Answers a document-grounded question using gemini-3.8-flash.
+ * Answers a document-grounded question using Gemini 3.8 Flash.
  */
 export async function askDocumentQuestion(
   upload: { fileUri?: string; mimeType: string; textContent?: string },
@@ -173,7 +317,6 @@ export async function askDocumentQuestion(
     });
   }
 
-  // Append relevant conversation context
   if (history.length > 0) {
     const formattedHistory = history
       .slice(-6)
@@ -188,11 +331,12 @@ export async function askDocumentQuestion(
 
   const response = await withGeminiRetry(async () => {
     return await ai.models.generateContent({
-      model: GEMINI_MODEL,
+      model: GEMINI_CONFIG.model,
       contents: contents as GenerateContentParamContents,
       config: {
         systemInstruction: DOCUMENT_QA_SYSTEM_PROMPT,
         responseMimeType: 'application/json',
+        temperature: 0.1,
       },
     });
   });
@@ -238,11 +382,12 @@ export async function compareDocuments(
 
   const response = await withGeminiRetry(async () => {
     return await ai.models.generateContent({
-      model: GEMINI_MODEL,
+      model: GEMINI_CONFIG.model,
       contents: contents as GenerateContentParamContents,
       config: {
         systemInstruction: LEGAL_GUARDRAILS_SYSTEM_INSTRUCTION,
         responseMimeType: 'application/json',
+        temperature: 0.1,
       },
     });
   });

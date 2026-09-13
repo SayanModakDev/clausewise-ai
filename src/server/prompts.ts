@@ -34,32 +34,39 @@ CRITICAL RESPONSIBLE LEGAL AI MANDATES (NON-NEGOTIABLE):
 
 export const DOCUMENT_ANALYSIS_PROMPT = `
 Analyze the provided legal document thoroughly.
-Provide a complete, structured analysis including:
-1. Overview:
-   - Document title and document type (e.g. Non-Disclosure Agreement, Master Services Agreement, Independent Contractor Agreement, etc.)
-   - Executive summary (2-3 clear paragraphs explaining the purpose, scope, and key commitments)
-   - Identified parties with their defined roles (e.g., Disclosing Party, Receiving Party, Client, Contractor)
-   - Key dates (Effective date, term, expiration, notice periods)
-   - Financial terms (Fees, rates, retainers, reimbursement policies, payment terms)
-   - Core obligations for each party
-   - Overall risk profile breakdown (summary and counts of INFORMATIONAL, IMPORTANT, REVIEW clauses)
+Provide a complete, document-grounded legal analysis conforming strictly to the requested schema:
 
-2. Clause Inspector:
-   - Extract every key substantive clause. Categorize each clause into one of:
-     ['Termination', 'Liability & Indemnification', 'Intellectual Property', 'Payment & Fees', 'Confidentiality', 'Governing Law & Dispute Resolution', 'Warranties & Disclaimers', 'Non-Compete & Restrictive Covenants', 'General & Miscellaneous']
-   - Assign an attentionLevel: 'INFORMATIONAL' | 'IMPORTANT' | 'REVIEW'
-   - Provide:
-     * sourceQuote: Exact verbatim text excerpt from the document
-     * plainExplanation: 1-2 sentence translation in clear, everyday language
-     * practicalImplications: What this means in practice for the person signing
-     * suggestedQuestions: 1-2 targeted questions to ask the counterparty or attorney
+1. documentType: Clear classification of the agreement (e.g., "Non-Disclosure Agreement", "Independent Consulting Agreement", "Employment Contract").
+2. summary: Plain-language executive summary explaining the purpose, scope, and key commitments.
+3. parties: Contracting parties with their identified roles (e.g., "Apex Ventures Inc. (Company)", "Alex Mercer (Consultant)").
+4. importantDates: Array of critical dates, durations, and deadlines:
+   - label: e.g. "Effective Date", "Term Expiration", "Notice for Termination"
+   - value: exact date or time frame verbatim from the document
+   - source: section or clause reference if available
+5. financialTerms: Array of compensation, fee, reimbursement, and penalty items:
+   - label: e.g. "Monthly Retainer", "Late Payment Interest"
+   - value: exact dollar figure, rate, or percentage verbatim from the text
+   - source: section reference
+6. obligations: Array of core commitments for each party:
+   - party: party bound by the obligation
+   - obligation: plain-language explanation of the required or prohibited conduct
+   - source: section reference
+7. clauses: Array of substantive clauses:
+   - title: descriptive title of the clause
+   - source: section number or paragraph (or null if unnumbered)
+   - originalText: exact verbatim text excerpt from the contract
+   - plainLanguage: plain-English explanation of what this clause means
+   - attentionLevel: "INFORMATIONAL" (administrative, definitions), "IMPORTANT" (core duties, payments, IP transfer), or "REVIEW" (unilateral terms, liability caps, non-competes)
+   - whyItMatters: practical significance and potential implications for the signer
+8. itemsToClarify: List of ambiguities, traps, or items to verify before signing.
+9. questionsForProfessional: 4-6 targeted, high-value questions to discuss with an attorney.
 
-3. Action Plan / Lawyer Prep:
-   - highPriorityChecklist: Actionable items the user should verify or negotiate before signing
-   - attorneyDiscussionQuestions: 4-6 targeted, high-value questions categorized by topic to ask an attorney
-   - signingReadiness: High-level readiness assessment and key blockers/considerations
-
-Return valid JSON conforming to the requested schema. Do not invent any facts not present in the document.
+MANDATORY RULES:
+- Analyze only information supported by the supplied document.
+- Never invent missing provisions or numbers. Preserve all dollar amounts, days, and percentages verbatim.
+- Never assert legal validity, legality, or enforceability.
+- When something is absent, state that it is not specified.
+- Informational assistance only, not formal legal advice.
 `;
 
 export const DOCUMENT_QA_SYSTEM_PROMPT = `

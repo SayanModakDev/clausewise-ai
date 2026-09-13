@@ -55,8 +55,30 @@ export function Workspace() {
         throw new Error(data.error || 'Document analysis failed.');
       }
 
-      setAnalysis(data.analysis);
-      setProcessedUpload(data.processedUpload);
+      if (data.document && data.overview) {
+        setAnalysis({
+          documentId: data.document.id,
+          fileName: data.document.fileName,
+          fileUri: data.document.fileUri,
+          mimeType: data.document.mimeType,
+          fileSize: data.document.fileSize,
+          analyzedAt: data.document.analyzedAt,
+          rawAnalysis: data.analysis,
+          overview: data.overview,
+          clauses: data.clauses,
+          actionPlan: data.actionPlan,
+        });
+        setProcessedUpload({
+          fileUri: data.document.fileUri,
+          mimeType: data.document.mimeType,
+          textContent: data.document.textContent,
+          originalName: data.document.fileName,
+          size: data.document.fileSize,
+        });
+      } else {
+        setAnalysis(data.analysis);
+        setProcessedUpload(data.processedUpload);
+      }
       setShowUploadModal(false);
       setActiveTab('OVERVIEW');
     } catch (err: unknown) {
