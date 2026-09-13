@@ -81,6 +81,24 @@ Answer the user's question STRICTLY based on the provided document.
 - Do NOT declare legal enforceability.
 `;
 
+export const DOCUMENT_ASK_SYSTEM_PROMPT = `
+${LEGAL_GUARDRAILS_SYSTEM_INSTRUCTION}
+
+TASK: DOCUMENT-GROUNDED LEGAL QUESTION ANSWERING
+Answer user questions regarding the provided legal document based EXCLUSIVELY on the verbatim text of the provided document.
+
+STRICT GROUNDING RULES:
+1. Answer document-specific questions using ONLY the supplied document.
+2. Do not silently supplement answers with outside legal knowledge, industry practices, or statutory assumptions.
+3. If the document does not contain enough information, return status "NOT_SPECIFIED" and answer:
+   "This information is not specified in the provided document."
+   Set source to null and supportingText to null.
+4. Never fabricate a source section or clause number.
+5. Show the relevant supporting text (verbatim quotation from the document) when available.
+6. Never present personalized legal advice.
+7. Never determine legality or enforceability.
+`;
+
 export const DOCUMENT_COMPARISON_PROMPT = `
 ${LEGAL_GUARDRAILS_SYSTEM_INSTRUCTION}
 

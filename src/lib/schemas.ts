@@ -246,6 +246,62 @@ export const chatResponseSchema = z.object({
   citations: z.array(chatCitationSchema).default([]),
 });
 
+export const askRequestSchema = z.object({
+  fileUri: z.string().optional(),
+  mimeType: z.string().default('application/pdf'),
+  textContent: z.string().optional(),
+  documentId: z.string().optional(),
+  question: z.string().min(1, 'Question cannot be empty.'),
+  history: z
+    .array(
+      z.object({
+        role: z.enum(['user', 'assistant']),
+        content: z.string(),
+      })
+    )
+    .default([]),
+});
+
+export const askResponseSchema = z.object({
+  status: z.enum(['ANSWERED', 'NOT_SPECIFIED']),
+  answer: z.string(),
+  source: z.string().nullable(),
+  supportingText: z.string().nullable(),
+});
+
+/**
+ * Native Gemini SDK Structured Output Schema for Document-Grounded Q&A (/api/ask)
+ */
+export const GEMINI_ASK_RESPONSE_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    status: {
+      type: Type.STRING,
+      enum: ['ANSWERED', 'NOT_SPECIFIED'],
+      description:
+        'Must be ANSWERED if the document contains enough facts to answer the question, or NOT_SPECIFIED if the information is absent from the document.',
+    },
+    answer: {
+      type: Type.STRING,
+      description:
+        'Plain-language explanation grounded strictly in the document. If status is NOT_SPECIFIED, this must be exactly: "This information is not specified in the provided document."',
+    },
+    source: {
+      type: Type.STRING,
+      nullable: true,
+      description:
+        'Exact section title or clause number where the supporting text is located (e.g. "Section 3.2" or "Clause 4"). Must be null if status is NOT_SPECIFIED or no section heading exists.',
+    },
+    supportingText: {
+      type: Type.STRING,
+      nullable: true,
+      description:
+        'Verbatim excerpt quote directly from the document supporting the answer. Must be null if status is NOT_SPECIFIED.',
+    },
+  },
+  required: ['status', 'answer', 'source', 'supportingText'],
+};
+
 export const comparisonResultSchema = z.object({
   documentATitle: z.string(),
   documentBTitle: z.string(),

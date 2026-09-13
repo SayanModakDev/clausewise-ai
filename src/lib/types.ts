@@ -158,6 +158,22 @@ export interface ChatCitation {
   sourceQuote: string;
 }
 
+export type QAPhaseStatus = 'ANSWERED' | 'NOT_SPECIFIED';
+
+export interface AskDocumentResponse {
+  status: QAPhaseStatus;
+  answer: string;
+  source: string | null;
+  supportingText: string | null;
+}
+
+export interface AskSessionItem {
+  id: string;
+  question: string;
+  response: AskDocumentResponse;
+  timestamp: string;
+}
+
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';

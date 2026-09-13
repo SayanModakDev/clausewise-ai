@@ -4,18 +4,22 @@ import {
   LEGAL_GUARDRAILS_SYSTEM_INSTRUCTION,
   DOCUMENT_ANALYSIS_PROMPT,
   DOCUMENT_QA_SYSTEM_PROMPT,
+  DOCUMENT_ASK_SYSTEM_PROMPT,
   DOCUMENT_COMPARISON_PROMPT,
 } from './prompts';
 import {
   documentAnalysisDataSchema,
   GEMINI_DOCUMENT_ANALYSIS_SCHEMA,
   chatResponseSchema,
+  askResponseSchema,
+  GEMINI_ASK_RESPONSE_SCHEMA,
   comparisonResultSchema,
 } from '@/lib/schemas';
 import type {
   DocumentAnalysisData,
   DocumentAnalysisResult,
   ChatCitation,
+  AskDocumentResponse,
   DocumentComparisonResult,
   ProcessedUpload,
   ClauseCategory,
@@ -398,6 +402,129 @@ export async function askDocumentQuestion(
       citations: [],
     };
   }
+}
+
+/**
+ * Production-quality Document-Grounded Q&A endpoint service (/api/ask).
+ * Adheres strictly to grounding rules and outputs:
+ * {
+ *   status: "ANSWERED" | "NOT_SPECIFIED",
+ *   answer: string,
+ *   source: string | null,
+ *   supportingText: string | null
+ * }
+ */
+export async function askDocumentGroundedQuestion(
+  upload: { fileUri?: string; mimeType: string; textContent?: string },
+  question: string,
+  history: Array<{ role: 'user' | 'assistant'; content: string }> = []
+): Promise<AskDocumentResponse> {
+  const contents: unknown[] = [];
+
+  if (upload.fileUri) {
+    contents.push({
+      fileData: {
+        fileUri: upload.fileUri,
+        mimeType: upload.mimeType,
+      },
+    });
+  } else if (upload.textContent) {
+    contents.push({
+      text: `DOCUMENT CONTENT:\n"""\n${upload.textContent}\n"""`,
+    });
+  }
+
+  if (history.length > 0) {
+    const formattedHistory = history
+      .slice(-4)
+      .map((h) => `${h.role === 'user' ? 'User' : 'ClauseWise'}: ${h.content}`)
+      .join('\n\n');
+    contents.push({ text: `PREVIOUS CONVERSATION CONTEXT:\n${formattedHistory}` });
+  }
+
+  contents.push({
+    text: `USER QUESTION: "${question}"
+
+Analyze the document for this specific question.
+- If the question is answered by the document text:
+  * Set status to "ANSWERED".
+  * Set answer to a clear, direct plain-language explanation of what the document says.
+  * Set source to the exact clause or section number/title (e.g. "Section 3.2" or "Clause 8").
+  * Set supportingText to the exact verbatim excerpt from the document that substantiates your answer.
+- If the document does NOT contain sufficient information or if the term/topic is absent:
+  * Set status to "NOT_SPECIFIED".
+  * Set answer to: "This information is not specified in the provided document."
+  * Set source to null.
+  * Set supportingText to null.`,
+  });
+
+  let response;
+  try {
+    response = await withGeminiRetry(async () => {
+      return await ai.models.generateContent({
+        model: GEMINI_CONFIG.model,
+        contents: contents as GenerateContentParamContents,
+        config: {
+          systemInstruction: DOCUMENT_ASK_SYSTEM_PROMPT,
+          responseMimeType: 'application/json',
+          responseSchema: GEMINI_ASK_RESPONSE_SCHEMA as ResponseSchemaParam,
+          temperature: 0.1,
+          thinkingConfig: GEMINI_CONFIG.thinkingConfig,
+        },
+      });
+    }, 2);
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    if (errorMsg.includes('RESOURCE_EXHAUSTED') || errorMsg.includes('429')) {
+      console.warn(`Gemini 3.8 Flash quota reached; activating ${GEMINI_CONFIG.fallbackModel} fallback for /api/ask.`);
+      response = await withGeminiRetry(async () => {
+        return await ai.models.generateContent({
+          model: GEMINI_CONFIG.fallbackModel,
+          contents: contents as GenerateContentParamContents,
+          config: {
+            systemInstruction: DOCUMENT_ASK_SYSTEM_PROMPT,
+            responseMimeType: 'application/json',
+            responseSchema: GEMINI_ASK_RESPONSE_SCHEMA as ResponseSchemaParam,
+            temperature: 0.1,
+            thinkingConfig: GEMINI_CONFIG.thinkingConfig,
+          },
+        });
+      }, 3);
+    } else {
+      throw err;
+    }
+  }
+
+  const responseText = response.text || '{}';
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(responseText.replace(/```json\n?|\n?```/g, '').trim());
+  } catch {
+    return {
+      status: 'NOT_SPECIFIED',
+      answer: 'This information is not specified in the provided document.',
+      source: null,
+      supportingText: null,
+    };
+  }
+
+  const validated = askResponseSchema.parse(parsed);
+
+  // Absolute safety check: If not specified or if answer indicates absence
+  if (
+    validated.status === 'NOT_SPECIFIED' ||
+    validated.answer.toLowerCase().includes('not specified in the provided document') ||
+    validated.answer.toLowerCase().includes('not mentioned in the provided document')
+  ) {
+    return {
+      status: 'NOT_SPECIFIED',
+      answer: 'This information is not specified in the provided document.',
+      source: null,
+      supportingText: null,
+    };
+  }
+
+  return validated;
 }
 
 /**
