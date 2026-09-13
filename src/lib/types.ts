@@ -112,6 +112,7 @@ export interface ClauseItem {
   sourceQuote: string;
   practicalImplications: string;
   suggestedQuestions?: string[];
+  source?: string | null;
 }
 
 export interface ChecklistItem {
@@ -144,10 +145,12 @@ export interface DocumentAnalysisResult {
   mimeType: string;
   fileSize: number;
   analyzedAt: string;
+  textContent?: string;
+  analysis: DocumentAnalysisData;
   rawAnalysis?: DocumentAnalysisData;
-  overview: DocumentOverview;
-  clauses: ClauseItem[];
-  actionPlan: ActionPlan;
+  overview?: DocumentOverview;
+  clauses?: ClauseItem[];
+  actionPlan?: ActionPlan;
 }
 
 export interface ChatCitation {

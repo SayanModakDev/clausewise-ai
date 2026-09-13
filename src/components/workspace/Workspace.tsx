@@ -10,39 +10,40 @@ import { ChatTab } from '@/components/chat/ChatTab';
 import { CompareTab } from '@/components/compare/CompareTab';
 import { ActionPlanTab } from '@/components/action-plan/ActionPlanTab';
 import { DocumentAnalysisResult, ProcessedUpload } from '@/lib/types';
-import { SAMPLE_INITIAL_ANALYSIS, SAMPLE_CONSULTING_CONTRACT_TEXT } from '@/lib/sample-data';
 import {
   FileText,
   Search,
   MessageSquare,
   GitCompare,
   CheckCircle,
-  X,
+  Plus,
 } from 'lucide-react';
 
 type WorkspaceTab = 'OVERVIEW' | 'CLAUSES' | 'ASK' | 'COMPARE' | 'ACTION_PLAN';
 
 export function Workspace() {
-  const [analysis, setAnalysis] = useState<DocumentAnalysisResult | null>(SAMPLE_INITIAL_ANALYSIS);
-  const [processedUpload, setProcessedUpload] = useState<ProcessedUpload | undefined>({
-    mimeType: 'text/plain',
-    textContent: SAMPLE_CONSULTING_CONTRACT_TEXT,
-    originalName: 'Independent_Consulting_Agreement_Apex.txt',
-    size: 4280,
-  });
+  // Empty landing state on initial visit
+  const [analysis, setAnalysis] = useState<DocumentAnalysisResult | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [processedUpload, setProcessedUpload] = useState<ProcessedUpload | undefined>(undefined);
   const [activeTab, setActiveTab] = useState<WorkspaceTab>('OVERVIEW');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
-  const [showUploadModal, setShowUploadModal] = useState(false);
 
-  // Handle upload of file (PDF or TXT)
-  const handleFileAnalysis = async (file: File) => {
+  // Core file analysis handler triggering the real /api/analyze backend
+  const handleFileAnalysis = async (fileToAnalyze?: File | null) => {
+    const targetFile = fileToAnalyze || selectedFile;
+    if (!targetFile) {
+      setAnalysisError('Please select a PDF or plain text document first.');
+      return;
+    }
+
     setIsAnalyzing(true);
     setAnalysisError(null);
 
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', targetFile);
 
       const res = await fetch('/api/analyze', {
         method: 'POST',
@@ -52,7 +53,7 @@ export function Workspace() {
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Document analysis failed.');
+        throw new Error(data.error || 'Document analysis failed. Please try again.');
       }
 
       if (data.document && data.overview) {
@@ -63,11 +64,14 @@ export function Workspace() {
           mimeType: data.document.mimeType,
           fileSize: data.document.fileSize,
           analyzedAt: data.document.analyzedAt,
+          textContent: data.document.textContent,
+          analysis: data.analysis,
           rawAnalysis: data.analysis,
           overview: data.overview,
           clauses: data.clauses,
           actionPlan: data.actionPlan,
         });
+
         setProcessedUpload({
           fileUri: data.document.fileUri,
           mimeType: data.document.mimeType,
@@ -79,65 +83,102 @@ export function Workspace() {
         setAnalysis(data.analysis);
         setProcessedUpload(data.processedUpload);
       }
-      setShowUploadModal(false);
+
       setActiveTab('OVERVIEW');
     } catch (err: unknown) {
-      setAnalysisError(err instanceof Error ? err.message : 'An error occurred during analysis.');
+      setAnalysisError(
+        err instanceof Error ? err.message : 'An unexpected error occurred during document analysis.'
+      );
     } finally {
       setIsAnalyzing(false);
     }
   };
 
-  // Handle sample selection with real live Gemini analysis
+  // Sample contract 1-click test handler
   const handleSampleSelect = async (sampleName: string, sampleText: string) => {
     const file = new File([sampleText], sampleName, { type: 'text/plain' });
+    setSelectedFile(file);
     await handleFileAnalysis(file);
   };
 
-  const reviewCount = analysis?.overview.riskProfile.reviewCount ?? 0;
+  // Reset to landing / empty state
+  const handleNewAnalysis = () => {
+    setAnalysis(null);
+    setSelectedFile(null);
+    setProcessedUpload(undefined);
+    setAnalysisError(null);
+    setActiveTab('OVERVIEW');
+  };
+
+  const reviewCount = analysis?.overview?.riskProfile?.reviewCount ?? 0;
+  const documentType = analysis?.overview?.documentType || analysis?.analysis?.documentType;
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
+      {/* Persistent Legal Notice Banner */}
       <DisclaimerBanner />
+
+      {/* Main Navbar */}
       <Navbar
         currentDocumentName={analysis?.fileName}
-        onOpenUpload={() => setShowUploadModal(true)}
-        onResetDocument={() => {
-          setAnalysis(null);
-          setShowUploadModal(true);
-        }}
+        detectedType={documentType}
+        onNewAnalysis={handleNewAnalysis}
         isAnalyzing={isAnalyzing}
       />
 
-      {/* Main Content Area */}
+      {/* Workspace Body */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {!analysis || showUploadModal ? (
-          <div className="relative">
-            {analysis && (
-              <div className="flex justify-end mb-2">
+        {!analysis ? (
+          /* Landing / Empty State */
+          <DocumentUploader
+            selectedFile={selectedFile}
+            onFileSelect={(file) => {
+              setSelectedFile(file);
+              setAnalysisError(null);
+            }}
+            onAnalyze={() => handleFileAnalysis(selectedFile)}
+            onSampleSelect={handleSampleSelect}
+            isAnalyzing={isAnalyzing}
+            error={analysisError}
+            onRetry={() => handleFileAnalysis(selectedFile)}
+          />
+        ) : (
+          /* Analysis Workspace */
+          <div className="space-y-6">
+            {/* Workspace Sub-header with Document Title & Type */}
+            <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                    Active Contract
+                  </span>
+                  {documentType && (
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                      {documentType}
+                    </span>
+                  )}
+                </div>
+                <h1 className="text-lg sm:text-xl font-extrabold text-slate-900 mt-1 truncate">
+                  {analysis.overview?.title || analysis.fileName}
+                </h1>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0 no-print">
                 <button
-                  onClick={() => setShowUploadModal(false)}
-                  className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-slate-800 bg-white border border-slate-200 px-3 py-1.5 rounded-lg"
+                  onClick={handleNewAnalysis}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 transition-colors shadow-xs"
                 >
-                  <X className="w-4 h-4" />
-                  <span>Return to current document</span>
+                  <Plus className="w-3.5 h-3.5 text-slate-500" />
+                  <span>New Analysis</span>
                 </button>
               </div>
-            )}
-            <DocumentUploader
-              onFileSelect={handleFileAnalysis}
-              onSampleSelect={handleSampleSelect}
-              isAnalyzing={isAnalyzing}
-              error={analysisError}
-            />
-          </div>
-        ) : (
-          <div className="space-y-6">
+            </div>
+
             {/* 5-Tab Navigation Bar */}
-            <div className="bg-white rounded-xl border border-slate-200 p-1.5 shadow-xs flex items-center gap-1 overflow-x-auto no-print">
+            <div className="bg-white rounded-2xl border border-slate-200 p-1.5 shadow-xs flex items-center gap-1 overflow-x-auto no-print">
               <button
                 onClick={() => setActiveTab('OVERVIEW')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all shrink-0 ${
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
                   activeTab === 'OVERVIEW'
                     ? 'bg-slate-900 text-white shadow-xs'
                     : 'text-slate-600 hover:bg-slate-100'
@@ -149,20 +190,20 @@ export function Workspace() {
 
               <button
                 onClick={() => setActiveTab('CLAUSES')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all shrink-0 ${
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
                   activeTab === 'CLAUSES'
                     ? 'bg-slate-900 text-white shadow-xs'
                     : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
                 <Search className="w-3.5 h-3.5" />
-                <span>Clause Inspector</span>
+                <span>Clauses</span>
                 {reviewCount > 0 && (
                   <span
-                    className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                    className={`px-1.5 py-0.2 rounded-full text-[10px] font-extrabold ${
                       activeTab === 'CLAUSES'
                         ? 'bg-amber-400 text-slate-950'
-                        : 'bg-amber-100 text-amber-800'
+                        : 'bg-amber-100 text-amber-900'
                     }`}
                   >
                     {reviewCount} Review
@@ -172,45 +213,48 @@ export function Workspace() {
 
               <button
                 onClick={() => setActiveTab('ASK')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all shrink-0 ${
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
                   activeTab === 'ASK'
                     ? 'bg-slate-900 text-white shadow-xs'
                     : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
                 <MessageSquare className="w-3.5 h-3.5" />
-                <span>Ask Document</span>
+                <span>Ask</span>
               </button>
 
               <button
                 onClick={() => setActiveTab('COMPARE')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all shrink-0 ${
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
                   activeTab === 'COMPARE'
                     ? 'bg-slate-900 text-white shadow-xs'
                     : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
                 <GitCompare className="w-3.5 h-3.5" />
-                <span>Compare Versions</span>
+                <span>Compare</span>
               </button>
 
               <button
                 onClick={() => setActiveTab('ACTION_PLAN')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all shrink-0 ${
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
                   activeTab === 'ACTION_PLAN'
                     ? 'bg-slate-900 text-white shadow-xs'
                     : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
                 <CheckCircle className="w-3.5 h-3.5" />
-                <span>Action Plan / Lawyer Prep</span>
+                <span>Action Plan</span>
               </button>
             </div>
 
             {/* Tab Views */}
-            <div className="transition-all">
-              {activeTab === 'OVERVIEW' && (
-                <OverviewTab overview={analysis.overview} />
+            <div className="transition-all duration-150">
+              {activeTab === 'OVERVIEW' && analysis.overview && (
+                <OverviewTab
+                  overview={analysis.overview}
+                  analysis={analysis.analysis || analysis.rawAnalysis}
+                />
               )}
 
               {activeTab === 'CLAUSES' && (
@@ -223,7 +267,7 @@ export function Workspace() {
                   fileUri={processedUpload?.fileUri}
                   mimeType={processedUpload?.mimeType}
                   textContent={processedUpload?.textContent}
-                  documentTitle={analysis.overview.title}
+                  documentTitle={analysis.overview?.title || analysis.fileName}
                 />
               )}
 
@@ -234,7 +278,13 @@ export function Workspace() {
               {activeTab === 'ACTION_PLAN' && (
                 <ActionPlanTab
                   actionPlan={analysis.actionPlan}
-                  documentTitle={analysis.overview.title}
+                  documentTitle={analysis.overview?.title || analysis.fileName}
+                  obligations={analysis.analysis?.obligations || analysis.rawAnalysis?.obligations}
+                  itemsToClarify={analysis.analysis?.itemsToClarify || analysis.rawAnalysis?.itemsToClarify}
+                  questionsForProfessional={
+                    analysis.analysis?.questionsForProfessional ||
+                    analysis.rawAnalysis?.questionsForProfessional
+                  }
                 />
               )}
             </div>
@@ -246,12 +296,12 @@ export function Workspace() {
       <footer className="mt-auto border-t border-slate-200 bg-white py-6 px-4 text-center text-xs text-slate-500 no-print">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-slate-800">ClauseWise AI</span>
+            <span className="font-bold text-slate-800">ClauseWise AI</span>
             <span>—</span>
             <span>Understand the document before you sign it.</span>
           </div>
           <p className="text-[11px] text-slate-400">
-            Informational assistance only. Not legal advice. Model: gemini-3.8-flash.
+            Informational assistance only. Not legal advice. Grounded by Gemini 3.8 Flash.
           </p>
         </div>
       </footer>

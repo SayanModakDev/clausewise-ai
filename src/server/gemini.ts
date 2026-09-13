@@ -8,6 +8,7 @@ import { GoogleGenAI } from '@google/genai';
  */
 export const GEMINI_CONFIG = {
   model: 'gemini-3.8-flash',
+  fallbackModel: 'gemini-3.6-flash',
   thinkingConfig: {
     thinkingBudget: 1024,
   },

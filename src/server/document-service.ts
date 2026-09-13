@@ -162,19 +162,42 @@ export async function analyzeDocument(
 
   contents.push({ text: DOCUMENT_ANALYSIS_PROMPT });
 
-  const response = await withGeminiRetry(async () => {
-    return await ai.models.generateContent({
-      model: GEMINI_CONFIG.model,
-      contents: contents as GenerateContentParamContents,
-      config: {
-        systemInstruction: LEGAL_GUARDRAILS_SYSTEM_INSTRUCTION,
-        responseMimeType: 'application/json',
-        responseSchema: GEMINI_DOCUMENT_ANALYSIS_SCHEMA as ResponseSchemaParam,
-        temperature: GEMINI_CONFIG.temperature,
-        thinkingConfig: GEMINI_CONFIG.thinkingConfig,
-      },
-    });
-  });
+  let response;
+  try {
+    response = await withGeminiRetry(async () => {
+      return await ai.models.generateContent({
+        model: GEMINI_CONFIG.model,
+        contents: contents as GenerateContentParamContents,
+        config: {
+          systemInstruction: LEGAL_GUARDRAILS_SYSTEM_INSTRUCTION,
+          responseMimeType: 'application/json',
+          responseSchema: GEMINI_DOCUMENT_ANALYSIS_SCHEMA as ResponseSchemaParam,
+          temperature: GEMINI_CONFIG.temperature,
+          thinkingConfig: GEMINI_CONFIG.thinkingConfig,
+        },
+      });
+    }, 2);
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    if (errorMsg.includes('RESOURCE_EXHAUSTED') || errorMsg.includes('429')) {
+      console.warn(`Gemini 3.8 Flash quota reached; activating ${GEMINI_CONFIG.fallbackModel} fallback.`);
+      response = await withGeminiRetry(async () => {
+        return await ai.models.generateContent({
+          model: GEMINI_CONFIG.fallbackModel,
+          contents: contents as GenerateContentParamContents,
+          config: {
+            systemInstruction: LEGAL_GUARDRAILS_SYSTEM_INSTRUCTION,
+            responseMimeType: 'application/json',
+            responseSchema: GEMINI_DOCUMENT_ANALYSIS_SCHEMA as ResponseSchemaParam,
+            temperature: GEMINI_CONFIG.temperature,
+            thinkingConfig: GEMINI_CONFIG.thinkingConfig,
+          },
+        });
+      }, 3);
+    } else {
+      throw err;
+    }
+  }
 
   const responseText = response.text || '{}';
   let parsedJson: unknown;
@@ -204,6 +227,7 @@ export async function analyzeDocument(
     return {
       id: `cl-${idx + 1}`,
       title: c.title,
+      source: c.source || null,
       category: inferClauseCategory(c.title, c.originalText),
       attentionLevel: c.attentionLevel,
       plainExplanation: c.plainLanguage,
@@ -287,6 +311,8 @@ export async function analyzeDocument(
     mimeType: upload.mimeType,
     fileSize: upload.size,
     analyzedAt: new Date().toISOString(),
+    textContent: upload.textContent,
+    analysis: rawAnalysis,
     rawAnalysis,
     overview: mappedOverview,
     clauses: mappedClauses,
@@ -329,17 +355,38 @@ export async function askDocumentQuestion(
     text: `USER QUESTION:\n"${question}"\n\nProvide an answer formatted in JSON with the structure: { "answer": string, "citations": [{ "clauseTitle": string, "sourceQuote": string }] }. If not mentioned in the document, set answer to "This information is not specified in the provided document." and citations to [].`,
   });
 
-  const response = await withGeminiRetry(async () => {
-    return await ai.models.generateContent({
-      model: GEMINI_CONFIG.model,
-      contents: contents as GenerateContentParamContents,
-      config: {
-        systemInstruction: DOCUMENT_QA_SYSTEM_PROMPT,
-        responseMimeType: 'application/json',
-        temperature: 0.1,
-      },
-    });
-  });
+  let response;
+  try {
+    response = await withGeminiRetry(async () => {
+      return await ai.models.generateContent({
+        model: GEMINI_CONFIG.model,
+        contents: contents as GenerateContentParamContents,
+        config: {
+          systemInstruction: DOCUMENT_QA_SYSTEM_PROMPT,
+          responseMimeType: 'application/json',
+          temperature: 0.1,
+        },
+      });
+    }, 2);
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    if (errorMsg.includes('RESOURCE_EXHAUSTED') || errorMsg.includes('429')) {
+      console.warn(`Gemini 3.8 Flash quota reached; activating ${GEMINI_CONFIG.fallbackModel} fallback for Q&A.`);
+      response = await withGeminiRetry(async () => {
+        return await ai.models.generateContent({
+          model: GEMINI_CONFIG.fallbackModel,
+          contents: contents as GenerateContentParamContents,
+          config: {
+            systemInstruction: DOCUMENT_QA_SYSTEM_PROMPT,
+            responseMimeType: 'application/json',
+            temperature: 0.1,
+          },
+        });
+      }, 3);
+    } else {
+      throw err;
+    }
+  }
 
   const responseText = response.text || '{}';
   try {

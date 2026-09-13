@@ -1,4 +1,4 @@
-import { DocumentAnalysisResult, DocumentComparisonResult } from './types';
+import { DocumentAnalysisResult, DocumentComparisonResult, DocumentAnalysisData } from './types';
 
 export const SAMPLE_CONSULTING_CONTRACT_TEXT = `
 INDEPENDENT CONSULTOR & IP ASSIGNMENT AGREEMENT
@@ -69,12 +69,105 @@ The parties acknowledge that unauthorized disclosure may cause irreparable injur
 This Agreement shall be governed by the laws of the State of New York.
 `;
 
+export const SAMPLE_DOCUMENT_ANALYSIS_DATA: DocumentAnalysisData = {
+  documentType: 'Independent Consulting & IP Assignment Agreement',
+  summary:
+    'This is a professional services contract between Apex Ventures Inc. and Alex Mercer for software architecture and GenAI engineering advisory services. It establishes a fixed monthly retainer of $12,500, sets clear intellectual property transfer terms, outlines mutual confidentiality protections, and limits liability to 12 months of paid fees.',
+  parties: [
+    'Apex Ventures Inc. (Company / Client)',
+    'Alex Mercer (Consultant / Contractor)',
+  ],
+  importantDates: [
+    { label: 'Effective Date', value: 'October 1, 2026', source: 'Preamble' },
+    { label: 'Initial Term', value: '12 months', source: 'Section 3.1' },
+    { label: 'Termination Notice', value: '60 calendar days', source: 'Section 3.2' },
+    { label: 'Breach Cure Period', value: '10 calendar days', source: 'Section 3.3' },
+  ],
+  financialTerms: [
+    { label: 'Monthly Retainer', value: '$12,500 / month', source: 'Section 2.1' },
+    { label: 'Expense Reimbursement', value: 'Over $100', source: 'Section 2.2' },
+    { label: 'Late Interest Penalty', value: '1.5% per month', source: 'Section 2.3' },
+  ],
+  obligations: [
+    { party: 'Consultant', obligation: 'Provide software architecture and AI engineering advisory in a diligent manner.', source: 'Section 1.2' },
+    { party: 'Company', obligation: 'Pay monthly retainer of $12,500 net 30 days and reimburse pre-approved expenses over $100.', source: 'Section 2.1' },
+    { party: 'Consultant', obligation: 'Assign all Work Product created during engagement as work made for hire.', source: 'Section 4.1' },
+    { party: 'Both Parties', obligation: 'Maintain confidentiality of proprietary information for five (5) years.', source: 'Section 5.2' },
+    { party: 'Consultant', obligation: 'Refrain from competitive GenAI consulting in North America for 6 months.', source: 'Section 7.2' },
+  ],
+  clauses: [
+    {
+      title: 'Consulting Retainer & Late Fees',
+      source: 'Section 2.1 & 2.3',
+      originalText: "Company shall pay Consultant a fixed advisory retainer of $12,500 per month, payable net 30 days upon receipt of Consultant's invoice... Late invoices shall accrue interest at a rate of 1.5% per month.",
+      plainLanguage: 'You receive $12,500 every month on net-30 terms. Late payments accrue interest at 1.5% monthly.',
+      attentionLevel: 'IMPORTANT',
+      whyItMatters: 'Guarantees regular advisory revenue with late fee protection, but requires waiting up to 30 days for payment.',
+    },
+    {
+      title: 'IP Assignment & Pre-Existing IP Carveout',
+      source: 'Section 4.1 & 4.2',
+      originalText: 'Consultant agrees that all work product... created solely or jointly by Consultant during the engagement ("Work Product") shall belong exclusively to Company as a "work made for hire." Consultant retains exclusive ownership of all Pre-Existing Intellectual Property...',
+      plainLanguage: 'Apex owns new custom deliverables made for them, but you retain full ownership of existing toolkits and libraries.',
+      attentionLevel: 'IMPORTANT',
+      whyItMatters: 'Protects your background proprietary code and reusable starter kits while assigning client deliverables.',
+    },
+    {
+      title: 'Termination for Convenience (60 Days)',
+      source: 'Section 3.2',
+      originalText: 'Either party may terminate this Agreement without cause upon providing sixty (60) calendar days prior written notice.',
+      plainLanguage: 'Either party can exit the contract at any time for any reason by giving 60 days advance written notice.',
+      attentionLevel: 'INFORMATIONAL',
+      whyItMatters: 'Provides a predictable 2-month runway if either party chooses to discontinue the consulting arrangement.',
+    },
+    {
+      title: 'Mutual Liability Cap (12 Months of Fees)',
+      source: 'Section 6.1',
+      originalText: "EACH PARTY'S TOTAL AGGREGATE LIABILITY ARISING UNDER THIS AGREEMENT SHALL BE STRICTLY CAPPED AT THE TOTAL FEES PAID OR PAYABLE BY COMPANY TO CONSULTANT IN THE PRECEDING TWELVE (12) MONTHS.",
+      plainLanguage: 'Maximum legal damages either party can recover are limited to the fees paid over the previous 12 months ($150,000 max).',
+      attentionLevel: 'IMPORTANT',
+      whyItMatters: 'Prevents unlimited financial liability in case of breach or commercial dispute.',
+    },
+    {
+      title: 'Non-Compete in GenAI Legal Space (6 Months)',
+      source: 'Section 7.2',
+      originalText: 'Consultant shall not provide competitive GenAI legal-document consulting services to direct competitors within North America for a period of six (6) months post-termination.',
+      plainLanguage: 'You are restricted from consulting for direct legal-tech competitors in North America for 6 months after ending this engagement.',
+      attentionLevel: 'REVIEW',
+      whyItMatters: 'Potentially restricts future advisory opportunities. Post-termination non-competes require attorney review, particularly given California governing law limitations.',
+    },
+    {
+      title: 'Confidentiality Duration (5 Years)',
+      source: 'Section 5.2',
+      originalText: 'Each party agrees to protect the Confidential Information... for a period of five (5) years following termination.',
+      plainLanguage: 'Both parties must protect confidential and trade secret information for 5 years after termination.',
+      attentionLevel: 'INFORMATIONAL',
+      whyItMatters: 'Standard non-disclosure commitment across commercial technology agreements.',
+    },
+  ],
+  itemsToClarify: [
+    'Clarify scope and specific named competitor list for the Section 7.2 non-compete covenant.',
+    'Attach an Exhibit A listing pre-existing libraries and tools to prevent ownership ambiguities.',
+    'Negotiate invoice payment timeline from Net 30 to Net 15 days.',
+    'Confirm expense pre-approval workflow for travel exceeding $100.',
+  ],
+  questionsForProfessional: [
+    'Is Section 7.2\'s non-compete restriction enforceable against an independent contractor under California law (Cal. Bus. & Prof. Code § 16600)?',
+    'Does the 12-month liability cap in Section 6.1 adequately protect against third-party indemnification claims under Section 6.2?',
+    'Does the "work made for hire" language in Section 4.1 correctly carve out pre-existing toolkits without title clouding?',
+    'Should the JAMS arbitration clause include mandatory good-faith executive escalation before formal filing?',
+  ],
+};
+
 export const SAMPLE_INITIAL_ANALYSIS: DocumentAnalysisResult = {
   documentId: 'sample-consulting-01',
   fileName: 'Independent_Consulting_Agreement_Apex.txt',
   mimeType: 'text/plain',
   fileSize: 4280,
   analyzedAt: '2026-10-01T10:00:00.000Z',
+  textContent: SAMPLE_CONSULTING_CONTRACT_TEXT,
+  analysis: SAMPLE_DOCUMENT_ANALYSIS_DATA,
+  rawAnalysis: SAMPLE_DOCUMENT_ANALYSIS_DATA,
   overview: {
     title: 'Independent Consulting & IP Assignment Agreement',
     documentType: 'Independent Contractor Agreement',
@@ -112,6 +205,7 @@ export const SAMPLE_INITIAL_ANALYSIS: DocumentAnalysisResult = {
     {
       id: 'cl-1',
       title: 'Consulting Retainer & Late Fees',
+      source: 'Section 2.1 & 2.3',
       category: 'Payment & Fees',
       attentionLevel: 'IMPORTANT',
       sourceQuote: 'Company shall pay Consultant a fixed advisory retainer of $12,500 per month, payable net 30 days upon receipt of Consultant\'s invoice... Late invoices shall accrue interest at a rate of 1.5% per month.',
@@ -122,6 +216,7 @@ export const SAMPLE_INITIAL_ANALYSIS: DocumentAnalysisResult = {
     {
       id: 'cl-2',
       title: 'IP Assignment & Pre-Existing IP Carveout',
+      source: 'Section 4.1 & 4.2',
       category: 'Intellectual Property',
       attentionLevel: 'IMPORTANT',
       sourceQuote: 'Consultant agrees that all work product... created solely or jointly by Consultant during the engagement ("Work Product") shall belong exclusively to Company as a "work made for hire." Consultant retains exclusive ownership of all Pre-Existing Intellectual Property...',
@@ -132,6 +227,7 @@ export const SAMPLE_INITIAL_ANALYSIS: DocumentAnalysisResult = {
     {
       id: 'cl-3',
       title: 'Termination for Convenience (60 Days)',
+      source: 'Section 3.2',
       category: 'Termination',
       attentionLevel: 'INFORMATIONAL',
       sourceQuote: 'Either party may terminate this Agreement without cause upon providing sixty (60) calendar days prior written notice.',
@@ -142,6 +238,7 @@ export const SAMPLE_INITIAL_ANALYSIS: DocumentAnalysisResult = {
     {
       id: 'cl-4',
       title: 'Mutual Liability Cap (12 Months of Fees)',
+      source: 'Section 6.1',
       category: 'Liability & Indemnification',
       attentionLevel: 'IMPORTANT',
       sourceQuote: 'EACH PARTY\'S TOTAL AGGREGATE LIABILITY ARISING UNDER THIS AGREEMENT SHALL BE STRICTLY CAPPED AT THE TOTAL FEES PAID OR PAYABLE BY COMPANY TO CONSULTANT IN THE PRECEDING TWELVE (12) MONTHS.',
@@ -152,6 +249,7 @@ export const SAMPLE_INITIAL_ANALYSIS: DocumentAnalysisResult = {
     {
       id: 'cl-5',
       title: 'Non-Compete in GenAI Legal Space (6 Months)',
+      source: 'Section 7.2',
       category: 'Non-Compete & Restrictive Covenants',
       attentionLevel: 'REVIEW',
       sourceQuote: 'Consultant shall not provide competitive GenAI legal-document consulting services to direct competitors within North America for a period of six (6) months post-termination.',
@@ -162,6 +260,7 @@ export const SAMPLE_INITIAL_ANALYSIS: DocumentAnalysisResult = {
     {
       id: 'cl-6',
       title: 'Confidentiality Duration (5 Years)',
+      source: 'Section 5.2',
       category: 'Confidentiality',
       attentionLevel: 'INFORMATIONAL',
       sourceQuote: 'Each party agrees to protect the Confidential Information... for a period of five (5) years following termination.',
@@ -172,6 +271,7 @@ export const SAMPLE_INITIAL_ANALYSIS: DocumentAnalysisResult = {
     {
       id: 'cl-7',
       title: 'Binding JAMS Arbitration in San Francisco',
+      source: 'Section 8.1 & 8.3',
       category: 'Governing Law & Dispute Resolution',
       attentionLevel: 'INFORMATIONAL',
       sourceQuote: 'Any dispute or claim arising out of this Agreement shall be resolved through confidential, binding arbitration administered by JAMS in San Francisco, California. Each party shall bear its own legal fees.',
