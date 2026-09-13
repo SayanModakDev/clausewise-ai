@@ -302,6 +302,99 @@ export const GEMINI_ASK_RESPONSE_SCHEMA = {
   required: ['status', 'answer', 'source', 'supportingText'],
 };
 
+export const materialContractChangeSchema = z.object({
+  clause: z.string(),
+  sourceA: z.string().nullable().default(null),
+  sourceB: z.string().nullable().default(null),
+  before: z.string(),
+  after: z.string(),
+  explanation: z.string(),
+  whyItMatters: z.string(),
+  attentionLevel: attentionLevelSchema,
+});
+
+export const smartComparisonResultSchema = z.object({
+  summary: z.string(),
+  changes: z.array(materialContractChangeSchema).default([]),
+});
+
+/**
+ * Native Gemini SDK Structured Output Schema for Material Contract Comparison (/api/compare)
+ */
+export const GEMINI_SMART_COMPARISON_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    summary: {
+      type: Type.STRING,
+      description:
+        'Concise executive summary of the revision and key material shifts between Original and Revised versions.',
+    },
+    changes: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          clause: {
+            type: Type.STRING,
+            description:
+              'Specific clause name or topic changed (e.g., "Termination Notice Period", "Monthly Compensation", "Non-Compete Covenant")',
+          },
+          sourceA: {
+            type: Type.STRING,
+            nullable: true,
+            description:
+              'Section number or title in original document (e.g. "Section 3.2" or null if newly added)',
+          },
+          sourceB: {
+            type: Type.STRING,
+            nullable: true,
+            description:
+              'Section number or title in revised document (e.g. "Section 3.2" or null if removed)',
+          },
+          before: {
+            type: Type.STRING,
+            description:
+              'Key verbatim term, number, or excerpt in original document (e.g. "30 days" or "₹40,000 per month")',
+          },
+          after: {
+            type: Type.STRING,
+            description:
+              'Key verbatim term, number, or excerpt in revised document (e.g. "60 days" or "₹45,000 per month")',
+          },
+          explanation: {
+            type: Type.STRING,
+            description:
+              'Plain-language explanation of what specifically changed between the two versions',
+          },
+          whyItMatters: {
+            type: Type.STRING,
+            description:
+              'Practical implications and business/legal significance for the signer',
+          },
+          attentionLevel: {
+            type: Type.STRING,
+            enum: ['INFORMATIONAL', 'IMPORTANT', 'REVIEW'],
+            description:
+              'Standardized attention level: INFORMATIONAL (minor administrative/clerical shifts), IMPORTANT (core duties, compensation, dates), or REVIEW (expanded restrictions, longer notice periods, altered liability/indemnity)',
+          },
+        },
+        required: [
+          'clause',
+          'sourceA',
+          'sourceB',
+          'before',
+          'after',
+          'explanation',
+          'whyItMatters',
+          'attentionLevel',
+        ],
+      },
+      description: 'Array of material contractual differences between the documents',
+    },
+  },
+  required: ['summary', 'changes'],
+};
+
 export const comparisonResultSchema = z.object({
   documentATitle: z.string(),
   documentBTitle: z.string(),

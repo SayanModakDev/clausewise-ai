@@ -102,14 +102,51 @@ STRICT GROUNDING RULES:
 export const DOCUMENT_COMPARISON_PROMPT = `
 ${LEGAL_GUARDRAILS_SYSTEM_INSTRUCTION}
 
-TASK:
-Compare Document A and Document B. Identify the meaningful legal and operational differences between the two versions.
-Focus on:
-1. Added clauses: Provisions present in B that were not in A.
-2. Removed clauses: Provisions present in A that are missing in B.
-3. Modified clauses: Specific clauses where wording, numbers, deadlines, or scope changed. Explain the practical change and whether the shift favors the signer, favors the counterparty, is neutral, or increases risk.
-4. Summary of changes: High-level overview of what this revision represents (e.g., standard redline, significant tightening of IP, or expanded indemnity).
-5. Risk shift summary: How the overall balance of risk changed between the two versions.
+TASK: SMART SEMANTIC CONTRACT COMPARISON
+Compare Document A (Original Version) and Document B (Revised Version).
+Identify and explain all MATERIAL, substantive contractual differences between the two versions in plain language.
 
-Return valid JSON conforming to the requested schema.
+AREAS TO RIGOROUSLY COMPARE:
+- Rights and discretionary powers
+- Obligations, deliverables, and performance standards
+- Payment and financial terms (retainers, rates, reimbursement caps, currency, invoicing timelines)
+- Important dates and milestones
+- Notice periods (e.g. days required for notice or termination)
+- Termination conditions (for convenience vs for cause, cure periods)
+- Renewal and auto-renewal mechanisms
+- Confidentiality terms and survival durations
+- Liability limitations and indemnification caps
+- Restrictions and covenants (non-competes, non-solicitation, exclusivity)
+- Dispute resolution, governing law, and arbitration rules
+- Penalties, interest rates, and liquidated damages
+- Other meaningfully changed contractual provisions
+
+CRITICAL COMPARISON MANDATES:
+1. MATERIAL OVER CLUTTER: Ignore insignificant formatting, capitalization, or spelling differences unless meaning changes.
+2. NEVER MANUFACTURE: Never invent or assume a difference that is not substantiated by the texts.
+3. PRESERVE EXACT NUMBERS: Retain all exact numbers, durations, percentages, and currencies verbatim (e.g. "30 days" vs "60 days", "₹40,000" vs "₹45,000", "3 months" vs "6 months").
+4. ATTRIBUTION: Accurately cite source section in Document A (sourceA) and Document B (sourceB), or null if newly added or removed.
+5. NO LEGALITY CLAIMS: Never declare that an altered provision is legal, illegal, valid, invalid, enforceable, or unenforceable.
+6. PRACTICAL SIGNIFICANCE: In "whyItMatters", explain the direct, tangible operational or financial consequence for the signer.
+7. STANDARDIZED ATTENTION LEVEL:
+   - "INFORMATIONAL": Minor clerical updates, definition adjustments, or standard neutral administrative shifts.
+   - "IMPORTANT": Core obligation modifications, payment or compensation changes, milestone date adjustments.
+   - "REVIEW": Expanded restrictions (e.g. non-competes), extended termination notice periods, altered liability limits, or added penalties.
+
+Return strictly valid JSON conforming to the schema:
+{
+  "summary": string,
+  "changes": [
+    {
+      "clause": string,
+      "sourceA": string | null,
+      "sourceB": string | null,
+      "before": string,
+      "after": string,
+      "explanation": string,
+      "whyItMatters": string,
+      "attentionLevel": "INFORMATIONAL" | "IMPORTANT" | "REVIEW"
+    }
+  ]
+}
 `;

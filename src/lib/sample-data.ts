@@ -1,4 +1,9 @@
-import { DocumentAnalysisResult, DocumentComparisonResult, DocumentAnalysisData } from './types';
+import {
+  DocumentAnalysisResult,
+  DocumentComparisonResult,
+  DocumentAnalysisData,
+  SmartComparisonResult,
+} from './types';
 
 export const SAMPLE_CONSULTING_CONTRACT_TEXT = `
 INDEPENDENT CONSULTOR & IP ASSIGNMENT AGREEMENT
@@ -394,3 +399,79 @@ export const SAMPLE_COMPARISON_RESULT: DocumentComparisonResult = {
     },
   ],
 };
+
+export const SAMPLE_SMART_COMPARISON: SmartComparisonResult = {
+  summary:
+    'The revised agreement incorporates 3 material changes: termination notice period increased from 30 to 60 days, monthly compensation increased from ₹40,000 to ₹45,000, and the post-termination non-compete covenant lengthened from 3 months to 6 months.',
+  changes: [
+    {
+      clause: 'Termination Notice Period',
+      sourceA: 'Section 3.2',
+      sourceB: 'Section 3.2',
+      before: '30 days prior written notice',
+      after: '60 days prior written notice',
+      explanation: 'The required notice period to terminate the agreement without cause increased from 30 to 60 days.',
+      whyItMatters:
+        'Requires a longer advance commitment before either party can exit, doubling the required operational transition runway.',
+      attentionLevel: 'REVIEW',
+    },
+    {
+      clause: 'Monthly Compensation',
+      sourceA: 'Section 2.1',
+      sourceB: 'Section 2.1',
+      before: '₹40,000 per month',
+      after: '₹45,000 per month',
+      explanation: 'Monthly consulting compensation increased by ₹5,000 (+12.5%) from ₹40,000 to ₹45,000.',
+      whyItMatters:
+        'Direct positive financial increase in monthly retainer income under identical net-30 invoicing timelines.',
+      attentionLevel: 'IMPORTANT',
+    },
+    {
+      clause: 'Post-Termination Non-Compete Covenant',
+      sourceA: 'Section 4.1',
+      sourceB: 'Section 4.1',
+      before: '3 months post-termination',
+      after: '6 months post-termination',
+      explanation: 'The post-termination non-compete restriction duration doubled from 3 months to 6 months.',
+      whyItMatters:
+        'Significantly extends post-engagement restrictive covenants. May limit subsequent advisory roles and requires attorney review.',
+      attentionLevel: 'REVIEW',
+    },
+  ],
+};
+
+export const SAMPLE_DIFF_DOC_A = `CONSULTING & SERVICES AGREEMENT (VERSION 1.0)
+This Consulting Agreement is entered into between Zenith Technologies Pvt Ltd ("Company") and Rohan Sharma ("Consultant").
+
+1. SCOPE OF SERVICES
+Consultant will provide full-stack web application engineering and AI system design.
+
+2. COMPENSATION
+Company shall pay Consultant a fixed fee of ₹40,000 per month, payable within thirty (30) days of invoice submission.
+
+3. TERM AND TERMINATION
+This Agreement shall remain in effect for 12 months. Either party may terminate this Agreement without cause upon providing thirty (30) days prior written notice.
+
+4. NON-COMPETE COVENANT
+Consultant agrees not to engage in competing legal-technology software consulting for a period of three (3) months following termination.
+
+5. CONFIDENTIALITY
+Both parties agree to hold proprietary information confidential for two (2) years.`;
+
+export const SAMPLE_DIFF_DOC_B = `CONSULTING & SERVICES AGREEMENT (VERSION 2.0 - REVISED)
+This Consulting Agreement is entered into between Zenith Technologies Pvt Ltd ("Company") and Rohan Sharma ("Consultant").
+
+1. SCOPE OF SERVICES
+Consultant will provide full-stack web application engineering and AI system design.
+
+2. COMPENSATION
+Company shall pay Consultant a fixed fee of ₹45,000 per month, payable within thirty (30) days of invoice submission.
+
+3. TERM AND TERMINATION
+This Agreement shall remain in effect for 12 months. Either party may terminate this Agreement without cause upon providing sixty (60) days prior written notice.
+
+4. NON-COMPETE COVENANT
+Consultant agrees not to engage in competing legal-technology software consulting for a period of six (6) months following termination.
+
+5. CONFIDENTIALITY
+Both parties agree to hold proprietary information confidential for two (2) years.`;

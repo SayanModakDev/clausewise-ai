@@ -13,14 +13,15 @@ import {
   chatResponseSchema,
   askResponseSchema,
   GEMINI_ASK_RESPONSE_SCHEMA,
-  comparisonResultSchema,
+  smartComparisonResultSchema,
+  GEMINI_SMART_COMPARISON_SCHEMA,
 } from '@/lib/schemas';
 import type {
   DocumentAnalysisData,
   DocumentAnalysisResult,
   ChatCitation,
   AskDocumentResponse,
-  DocumentComparisonResult,
+  SmartComparisonResult,
   ProcessedUpload,
   ClauseCategory,
 } from '@/lib/types';
@@ -530,10 +531,13 @@ Analyze the document for this specific question.
 /**
  * Compares two documents and identifies substantive changes and risk shifts.
  */
+/**
+ * Compares two documents and identifies substantive changes and risk shifts.
+ */
 export async function compareDocuments(
   docA: ProcessedUpload,
   docB: ProcessedUpload
-): Promise<DocumentComparisonResult> {
+): Promise<SmartComparisonResult> {
   const contents: unknown[] = [];
 
   if (docA.fileUri) {
@@ -541,7 +545,7 @@ export async function compareDocuments(
       fileData: { fileUri: docA.fileUri, mimeType: docA.mimeType },
     });
   } else if (docA.textContent) {
-    contents.push({ text: `DOCUMENT A (${docA.originalName}):\n"""\n${docA.textContent}\n"""` });
+    contents.push({ text: `DOCUMENT A (ORIGINAL VERSION):\n"""\n${docA.textContent}\n"""` });
   }
 
   if (docB.fileUri) {
@@ -549,25 +553,50 @@ export async function compareDocuments(
       fileData: { fileUri: docB.fileUri, mimeType: docB.mimeType },
     });
   } else if (docB.textContent) {
-    contents.push({ text: `DOCUMENT B (${docB.originalName}):\n"""\n${docB.textContent}\n"""` });
+    contents.push({ text: `DOCUMENT B (REVISED VERSION):\n"""\n${docB.textContent}\n"""` });
   }
 
   contents.push({ text: DOCUMENT_COMPARISON_PROMPT });
 
-  const response = await withGeminiRetry(async () => {
-    return await ai.models.generateContent({
-      model: GEMINI_CONFIG.model,
-      contents: contents as GenerateContentParamContents,
-      config: {
-        systemInstruction: LEGAL_GUARDRAILS_SYSTEM_INSTRUCTION,
-        responseMimeType: 'application/json',
-        temperature: 0.1,
-      },
-    });
-  });
+  let response;
+  try {
+    response = await withGeminiRetry(async () => {
+      return await ai.models.generateContent({
+        model: GEMINI_CONFIG.model,
+        contents: contents as GenerateContentParamContents,
+        config: {
+          systemInstruction: LEGAL_GUARDRAILS_SYSTEM_INSTRUCTION,
+          responseMimeType: 'application/json',
+          responseSchema: GEMINI_SMART_COMPARISON_SCHEMA as ResponseSchemaParam,
+          temperature: 0.1,
+          thinkingConfig: GEMINI_CONFIG.thinkingConfig,
+        },
+      });
+    }, 2);
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    if (errorMsg.includes('RESOURCE_EXHAUSTED') || errorMsg.includes('429')) {
+      console.warn(`Gemini 3.8 Flash quota reached; activating ${GEMINI_CONFIG.fallbackModel} fallback for /api/compare.`);
+      response = await withGeminiRetry(async () => {
+        return await ai.models.generateContent({
+          model: GEMINI_CONFIG.fallbackModel,
+          contents: contents as GenerateContentParamContents,
+          config: {
+            systemInstruction: LEGAL_GUARDRAILS_SYSTEM_INSTRUCTION,
+            responseMimeType: 'application/json',
+            responseSchema: GEMINI_SMART_COMPARISON_SCHEMA as ResponseSchemaParam,
+            temperature: 0.1,
+            thinkingConfig: GEMINI_CONFIG.thinkingConfig,
+          },
+        });
+      }, 3);
+    } else {
+      throw err;
+    }
+  }
 
   const responseText = response.text || '{}';
   const cleaned = responseText.replace(/```json\n?|\n?```/g, '').trim();
   const parsed = JSON.parse(cleaned);
-  return comparisonResultSchema.parse(parsed);
+  return smartComparisonResultSchema.parse(parsed);
 }

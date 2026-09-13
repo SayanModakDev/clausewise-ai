@@ -204,6 +204,22 @@ export interface ProcessedUpload {
   size: number;
 }
 
+export interface MaterialContractChange {
+  clause: string;
+  sourceA: string | null;
+  sourceB: string | null;
+  before: string;
+  after: string;
+  explanation: string;
+  whyItMatters: string;
+  attentionLevel: AttentionLevel;
+}
+
+export interface SmartComparisonResult {
+  summary: string;
+  changes: MaterialContractChange[];
+}
+
 export interface DocumentComparisonResult {
   documentATitle: string;
   documentBTitle: string;
@@ -212,4 +228,5 @@ export interface DocumentComparisonResult {
   addedClauses: ComparisonDelta[];
   removedClauses: ComparisonDelta[];
   modifiedClauses: ModifiedClauseDiff[];
+  smartResult?: SmartComparisonResult;
 }

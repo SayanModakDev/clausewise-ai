@@ -5,6 +5,13 @@ import type { ProcessedUpload } from '@/lib/types';
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
+  if (!process.env.GEMINI_API_KEY) {
+    return NextResponse.json(
+      { error: 'Gemini API key is not configured on the server. Please check server settings.' },
+      { status: 500 }
+    );
+  }
+
   try {
     const contentType = req.headers.get('content-type') || '';
     let uploadA: ProcessedUpload;
@@ -12,12 +19,12 @@ export async function POST(req: NextRequest) {
 
     if (contentType.includes('multipart/form-data')) {
       const formData = await req.formData();
-      const fileA = formData.get('fileA') as File | null;
-      const fileB = formData.get('fileB') as File | null;
+      const fileA = (formData.get('fileA') || formData.get('originalFile')) as File | null;
+      const fileB = (formData.get('fileB') || formData.get('revisedFile')) as File | null;
 
       if (!fileA || !fileB) {
         return NextResponse.json(
-          { error: 'Both Document A and Document B are required for comparison.' },
+          { error: 'Both Original Document (fileA) and Revised Document (fileB) are required for comparison.' },
           { status: 400 }
         );
       }
@@ -26,11 +33,12 @@ export async function POST(req: NextRequest) {
       uploadB = await processUploadedFile(fileB);
     } else {
       const body = await req.json();
-      const { docA, docB } = body;
+      const docA = body.docA || body.originalDoc;
+      const docB = body.docB || body.revisedDoc;
 
       if (!docA || !docB) {
         return NextResponse.json(
-          { error: 'Both docA and docB payloads are required.' },
+          { error: 'Both docA (Original Document) and docB (Revised Document) payloads are required.' },
           { status: 400 }
         );
       }
@@ -39,7 +47,7 @@ export async function POST(req: NextRequest) {
         fileUri: docA.fileUri,
         mimeType: docA.mimeType || 'text/plain',
         textContent: docA.textContent,
-        originalName: docA.originalName || 'Document A',
+        originalName: docA.originalName || 'Original Document',
         size: docA.size || 0,
       };
 
@@ -47,7 +55,7 @@ export async function POST(req: NextRequest) {
         fileUri: docB.fileUri,
         mimeType: docB.mimeType || 'text/plain',
         textContent: docB.textContent,
-        originalName: docB.originalName || 'Document B',
+        originalName: docB.originalName || 'Revised Document',
         size: docB.size || 0,
       };
     }
@@ -56,6 +64,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      summary: comparison.summary,
+      changes: comparison.changes,
       comparison,
     });
   } catch (err: unknown) {
