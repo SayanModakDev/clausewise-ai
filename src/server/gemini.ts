@@ -8,7 +8,8 @@ import { GoogleGenAI } from '@google/genai';
  */
 export const GEMINI_CONFIG = {
   model: 'gemini-3.8-flash',
-  fallbackModel: 'gemini-3.6-flash',
+  fallbackModel: 'gemini-3.7-flash',
+  fallbackModels: ['gemini-3.7-flash', 'gemini-3.5-flash'] as const,
   thinkingConfig: {
     thinkingBudget: 1024,
   },
@@ -35,8 +36,8 @@ export const ai = getGeminiClient();
  */
 export async function withGeminiRetry<T>(
   operation: () => Promise<T>,
-  maxRetries = 4,
-  initialDelayMs = 2000
+  maxRetries = 3,
+  initialDelayMs = 1500
 ): Promise<T> {
   let lastError: unknown;
   for (let attempt = 0; attempt < maxRetries; attempt++) {
@@ -57,9 +58,43 @@ export async function withGeminiRetry<T>(
         throw err;
       }
 
-      const delay = initialDelayMs * Math.pow(2, attempt) + Math.random() * 500;
+      const delay = initialDelayMs * Math.pow(2, attempt) + Math.random() * 300;
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
+  throw lastError;
+}
+
+/**
+ * Runs a Gemini generation task with automatic fallback across models when quota/rate limits are met.
+ */
+export async function executeWithModelFallback<T>(
+  operation: (modelName: string) => Promise<T>
+): Promise<T> {
+  const models = [GEMINI_CONFIG.model, ...GEMINI_CONFIG.fallbackModels];
+  let lastError: unknown;
+
+  for (let i = 0; i < models.length; i++) {
+    const currentModel = models[i];
+    try {
+      return await withGeminiRetry(() => operation(currentModel), 2, 1000);
+    } catch (err: unknown) {
+      lastError = err;
+      const msg = err instanceof Error ? err.message : String(err);
+      const isQuota =
+        msg.includes('RESOURCE_EXHAUSTED') ||
+        msg.includes('429') ||
+        msg.includes('Quota exceeded');
+
+      if (isQuota && i < models.length - 1) {
+        console.warn(
+          `[Gemini Fallback] Quota reached for ${currentModel}; cascading to ${models[i + 1]}...`
+        );
+        continue;
+      }
+      throw err;
+    }
+  }
+
   throw lastError;
 }

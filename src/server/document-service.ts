@@ -1,5 +1,5 @@
 import 'server-only';
-import { ai, GEMINI_CONFIG, withGeminiRetry } from './gemini';
+import { ai, GEMINI_CONFIG, withGeminiRetry, executeWithModelFallback } from './gemini';
 import {
   LEGAL_GUARDRAILS_SYSTEM_INSTRUCTION,
   DOCUMENT_ANALYSIS_PROMPT,
@@ -174,42 +174,19 @@ export async function analyzeDocument(
 
   contents.push({ text: DOCUMENT_ANALYSIS_PROMPT });
 
-  let response;
-  try {
-    response = await withGeminiRetry(async () => {
-      return await ai.models.generateContent({
-        model: GEMINI_CONFIG.model,
-        contents: contents as GenerateContentParamContents,
-        config: {
-          systemInstruction: LEGAL_GUARDRAILS_SYSTEM_INSTRUCTION,
-          responseMimeType: 'application/json',
-          responseSchema: GEMINI_DOCUMENT_ANALYSIS_SCHEMA as ResponseSchemaParam,
-          temperature: GEMINI_CONFIG.temperature,
-          thinkingConfig: GEMINI_CONFIG.thinkingConfig,
-        },
-      });
-    }, 2);
-  } catch (err: unknown) {
-    const errorMsg = err instanceof Error ? err.message : String(err);
-    if (errorMsg.includes('RESOURCE_EXHAUSTED') || errorMsg.includes('429')) {
-      console.warn(`Gemini 3.8 Flash quota reached; activating ${GEMINI_CONFIG.fallbackModel} fallback.`);
-      response = await withGeminiRetry(async () => {
-        return await ai.models.generateContent({
-          model: GEMINI_CONFIG.fallbackModel,
-          contents: contents as GenerateContentParamContents,
-          config: {
-            systemInstruction: LEGAL_GUARDRAILS_SYSTEM_INSTRUCTION,
-            responseMimeType: 'application/json',
-            responseSchema: GEMINI_DOCUMENT_ANALYSIS_SCHEMA as ResponseSchemaParam,
-            temperature: GEMINI_CONFIG.temperature,
-            thinkingConfig: GEMINI_CONFIG.thinkingConfig,
-          },
-        });
-      }, 3);
-    } else {
-      throw err;
-    }
-  }
+  const response = await executeWithModelFallback(async (modelName) => {
+    return await ai.models.generateContent({
+      model: modelName,
+      contents: contents as GenerateContentParamContents,
+      config: {
+        systemInstruction: LEGAL_GUARDRAILS_SYSTEM_INSTRUCTION,
+        responseMimeType: 'application/json',
+        responseSchema: GEMINI_DOCUMENT_ANALYSIS_SCHEMA as ResponseSchemaParam,
+        temperature: GEMINI_CONFIG.temperature,
+        thinkingConfig: GEMINI_CONFIG.thinkingConfig,
+      },
+    });
+  });
 
   const responseText = response.text || '{}';
   let parsedJson: unknown;
@@ -466,42 +443,19 @@ Analyze the document for this specific question.
   * Set supportingText to null.`,
   });
 
-  let response;
-  try {
-    response = await withGeminiRetry(async () => {
-      return await ai.models.generateContent({
-        model: GEMINI_CONFIG.model,
-        contents: contents as GenerateContentParamContents,
-        config: {
-          systemInstruction: DOCUMENT_ASK_SYSTEM_PROMPT,
-          responseMimeType: 'application/json',
-          responseSchema: GEMINI_ASK_RESPONSE_SCHEMA as ResponseSchemaParam,
-          temperature: 0.1,
-          thinkingConfig: GEMINI_CONFIG.thinkingConfig,
-        },
-      });
-    }, 2);
-  } catch (err: unknown) {
-    const errorMsg = err instanceof Error ? err.message : String(err);
-    if (errorMsg.includes('RESOURCE_EXHAUSTED') || errorMsg.includes('429')) {
-      console.warn(`Gemini 3.8 Flash quota reached; activating ${GEMINI_CONFIG.fallbackModel} fallback for /api/ask.`);
-      response = await withGeminiRetry(async () => {
-        return await ai.models.generateContent({
-          model: GEMINI_CONFIG.fallbackModel,
-          contents: contents as GenerateContentParamContents,
-          config: {
-            systemInstruction: DOCUMENT_ASK_SYSTEM_PROMPT,
-            responseMimeType: 'application/json',
-            responseSchema: GEMINI_ASK_RESPONSE_SCHEMA as ResponseSchemaParam,
-            temperature: 0.1,
-            thinkingConfig: GEMINI_CONFIG.thinkingConfig,
-          },
-        });
-      }, 3);
-    } else {
-      throw err;
-    }
-  }
+  const response = await executeWithModelFallback(async (modelName) => {
+    return await ai.models.generateContent({
+      model: modelName,
+      contents: contents as GenerateContentParamContents,
+      config: {
+        systemInstruction: DOCUMENT_ASK_SYSTEM_PROMPT,
+        responseMimeType: 'application/json',
+        responseSchema: GEMINI_ASK_RESPONSE_SCHEMA as ResponseSchemaParam,
+        temperature: 0.1,
+        thinkingConfig: GEMINI_CONFIG.thinkingConfig,
+      },
+    });
+  });
 
   const responseText = response.text || '{}';
   let parsed: unknown;
@@ -565,42 +519,19 @@ export async function compareDocuments(
 
   contents.push({ text: DOCUMENT_COMPARISON_PROMPT });
 
-  let response;
-  try {
-    response = await withGeminiRetry(async () => {
-      return await ai.models.generateContent({
-        model: GEMINI_CONFIG.model,
-        contents: contents as GenerateContentParamContents,
-        config: {
-          systemInstruction: LEGAL_GUARDRAILS_SYSTEM_INSTRUCTION,
-          responseMimeType: 'application/json',
-          responseSchema: GEMINI_SMART_COMPARISON_SCHEMA as ResponseSchemaParam,
-          temperature: 0.1,
-          thinkingConfig: GEMINI_CONFIG.thinkingConfig,
-        },
-      });
-    }, 2);
-  } catch (err: unknown) {
-    const errorMsg = err instanceof Error ? err.message : String(err);
-    if (errorMsg.includes('RESOURCE_EXHAUSTED') || errorMsg.includes('429')) {
-      console.warn(`Gemini 3.8 Flash quota reached; activating ${GEMINI_CONFIG.fallbackModel} fallback for /api/compare.`);
-      response = await withGeminiRetry(async () => {
-        return await ai.models.generateContent({
-          model: GEMINI_CONFIG.fallbackModel,
-          contents: contents as GenerateContentParamContents,
-          config: {
-            systemInstruction: LEGAL_GUARDRAILS_SYSTEM_INSTRUCTION,
-            responseMimeType: 'application/json',
-            responseSchema: GEMINI_SMART_COMPARISON_SCHEMA as ResponseSchemaParam,
-            temperature: 0.1,
-            thinkingConfig: GEMINI_CONFIG.thinkingConfig,
-          },
-        });
-      }, 3);
-    } else {
-      throw err;
-    }
-  }
+  const response = await executeWithModelFallback(async (modelName) => {
+    return await ai.models.generateContent({
+      model: modelName,
+      contents: contents as GenerateContentParamContents,
+      config: {
+        systemInstruction: LEGAL_GUARDRAILS_SYSTEM_INSTRUCTION,
+        responseMimeType: 'application/json',
+        responseSchema: GEMINI_SMART_COMPARISON_SCHEMA as ResponseSchemaParam,
+        temperature: 0.1,
+        thinkingConfig: GEMINI_CONFIG.thinkingConfig,
+      },
+    });
+  });
 
   const responseText = response.text || '{}';
   let parsed: unknown;

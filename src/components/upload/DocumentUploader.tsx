@@ -15,7 +15,11 @@ import {
   Scale,
   FileCheck2,
 } from 'lucide-react';
-import { SAMPLE_CONSULTING_CONTRACT_TEXT, SAMPLE_NDA_CONTRACT_TEXT } from '@/lib/sample-data';
+import {
+  SAMPLE_CONSULTING_CONTRACT_TEXT,
+  SAMPLE_NDA_CONTRACT_TEXT,
+  SAMPLE_DIFF_DOC_A,
+} from '@/lib/sample-data';
 
 interface DocumentUploaderProps {
   selectedFile: File | null;
@@ -362,24 +366,50 @@ export function DocumentUploader({
             <span className="text-xs text-slate-400 hidden sm:inline">Preloaded legal documents for testing</span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button
+              type="button"
+              disabled={isAnalyzing}
+              onClick={() =>
+                onSampleSelect('employment_agreement_v1.txt', SAMPLE_DIFF_DOC_A)
+              }
+              className="flex items-start gap-3 p-3.5 rounded-xl border border-blue-200 bg-blue-50/30 hover:border-blue-500 hover:bg-blue-50/60 transition-all text-left group shadow-xs disabled:opacity-50"
+            >
+              <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 shrink-0 transition-colors">
+                <FileText className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <p className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition-colors truncate">
+                    Employment Agreement (v1)
+                  </p>
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 uppercase tracking-wide">
+                    Demo
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">
+                  ₹40k/mo salary, 30-day termination notice, 3-mo non-compete, and Bangalore arbitration.
+                </p>
+              </div>
+            </button>
+
             <button
               type="button"
               disabled={isAnalyzing}
               onClick={() =>
                 onSampleSelect('Independent_Consulting_Agreement_Apex.txt', SAMPLE_CONSULTING_CONTRACT_TEXT)
               }
-              className="flex items-start gap-3 p-4 rounded-xl border border-slate-200 bg-white hover:border-blue-500 hover:bg-blue-50/20 transition-all text-left group shadow-xs disabled:opacity-50"
+              className="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 bg-white hover:border-blue-500 hover:bg-blue-50/20 transition-all text-left group shadow-xs disabled:opacity-50"
             >
-              <div className="w-9 h-9 rounded-lg bg-slate-100 group-hover:bg-blue-100 flex items-center justify-center text-slate-600 group-hover:text-blue-600 shrink-0 transition-colors">
-                <FileText className="w-4 h-4" />
+              <div className="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-blue-100 flex items-center justify-center text-slate-600 group-hover:text-blue-600 shrink-0 transition-colors">
+                <Scale className="w-4 h-4" />
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition-colors truncate">
-                  Software Consulting & IP Agreement
+                  Consulting & IP Agreement
                 </p>
                 <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">
-                  $12.5k/mo retainer, IP work-made-for-hire assignment, liability caps, and 6-month non-compete covenant.
+                  $12.5k/mo retainer, IP assignment, liability caps, and 6-mo non-compete covenant.
                 </p>
               </div>
             </button>
@@ -390,17 +420,17 @@ export function DocumentUploader({
               onClick={() =>
                 onSampleSelect('Mutual_Non_Disclosure_Agreement_Meridian.txt', SAMPLE_NDA_CONTRACT_TEXT)
               }
-              className="flex items-start gap-3 p-4 rounded-xl border border-slate-200 bg-white hover:border-blue-500 hover:bg-blue-50/20 transition-all text-left group shadow-xs disabled:opacity-50"
+              className="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 bg-white hover:border-blue-500 hover:bg-blue-50/20 transition-all text-left group shadow-xs disabled:opacity-50"
             >
-              <div className="w-9 h-9 rounded-lg bg-slate-100 group-hover:bg-blue-100 flex items-center justify-center text-slate-600 group-hover:text-blue-600 shrink-0 transition-colors">
+              <div className="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-blue-100 flex items-center justify-center text-slate-600 group-hover:text-blue-600 shrink-0 transition-colors">
                 <BookOpen className="w-4 h-4" />
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition-colors truncate">
-                  Mutual Non-Disclosure Agreement (NDA)
+                  Mutual NDA Agreement
                 </p>
                 <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">
-                  2-year term with 5-year survival, trade secret carveouts, non-solicitation, and injunctive relief clauses.
+                  2-year term with 5-year survival, trade secrets, non-solicitation, and injunctive relief.
                 </p>
               </div>
             </button>

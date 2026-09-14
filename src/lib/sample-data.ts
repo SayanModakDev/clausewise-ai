@@ -406,72 +406,80 @@ export const SAMPLE_SMART_COMPARISON: SmartComparisonResult = {
   changes: [
     {
       clause: 'Termination Notice Period',
-      sourceA: 'Section 3.2',
-      sourceB: 'Section 3.2',
+      sourceA: 'Section 3',
+      sourceB: 'Section 3',
       before: '30 days prior written notice',
       after: '60 days prior written notice',
-      explanation: 'The required notice period to terminate the agreement without cause increased from 30 to 60 days.',
+      explanation: 'The required notice period to terminate the employment relationship without cause increased from 30 to 60 days.',
       whyItMatters:
         'Requires a longer advance commitment before either party can exit, doubling the required operational transition runway.',
       attentionLevel: 'REVIEW',
     },
     {
       clause: 'Monthly Compensation',
-      sourceA: 'Section 2.1',
-      sourceB: 'Section 2.1',
+      sourceA: 'Section 2',
+      sourceB: 'Section 2',
       before: '₹40,000 per month',
       after: '₹45,000 per month',
-      explanation: 'Monthly consulting compensation increased by ₹5,000 (+12.5%) from ₹40,000 to ₹45,000.',
+      explanation: 'Fixed monthly compensation increased by ₹5,000 (+12.5%) from ₹40,000 to ₹45,000.',
       whyItMatters:
-        'Direct positive financial increase in monthly retainer income under identical net-30 invoicing timelines.',
+        'Direct positive financial increase in monthly base compensation under identical monthly bank transfer timelines.',
       attentionLevel: 'IMPORTANT',
     },
     {
       clause: 'Post-Termination Non-Compete Covenant',
-      sourceA: 'Section 4.1',
-      sourceB: 'Section 4.1',
+      sourceA: 'Section 5',
+      sourceB: 'Section 5',
       before: '3 months post-termination',
       after: '6 months post-termination',
       explanation: 'The post-termination non-compete restriction duration doubled from 3 months to 6 months.',
       whyItMatters:
-        'Significantly extends post-engagement restrictive covenants. May limit subsequent advisory roles and requires attorney review.',
+        'Significantly extends post-employment restrictive covenant. Restricts subsequent software engineering roles with commercial competitors.',
       attentionLevel: 'REVIEW',
     },
   ],
 };
 
-export const SAMPLE_DIFF_DOC_A = `CONSULTING & SERVICES AGREEMENT (VERSION 1.0)
-This Consulting Agreement is entered into between Zenith Technologies Pvt Ltd ("Company") and Rohan Sharma ("Consultant").
+export const SAMPLE_DIFF_DOC_A = `EMPLOYMENT AGREEMENT (VERSION A)
 
-1. SCOPE OF SERVICES
-Consultant will provide full-stack web application engineering and AI system design.
+This Employment Agreement ("Agreement") is entered into as of October 15, 2024, by and between Novacorp Solutions Private Limited ("Employer"), a fictional software enterprise, and Priya Sen ("Employee").
 
-2. COMPENSATION
-Company shall pay Consultant a fixed fee of ₹40,000 per month, payable within thirty (30) days of invoice submission.
+1. POSITION AND DUTIES
+Employee shall serve in the full-time role of Senior Frontend Engineer, reporting to the Director of Engineering, and shall perform software development, architectural design, and related technical services.
 
-3. TERM AND TERMINATION
-This Agreement shall remain in effect for 12 months. Either party may terminate this Agreement without cause upon providing thirty (30) days prior written notice.
-
-4. NON-COMPETE COVENANT
-Consultant agrees not to engage in competing legal-technology software consulting for a period of three (3) months following termination.
-
-5. CONFIDENTIALITY
-Both parties agree to hold proprietary information confidential for two (2) years.`;
-
-export const SAMPLE_DIFF_DOC_B = `CONSULTING & SERVICES AGREEMENT (VERSION 2.0 - REVISED)
-This Consulting Agreement is entered into between Zenith Technologies Pvt Ltd ("Company") and Rohan Sharma ("Consultant").
-
-1. SCOPE OF SERVICES
-Consultant will provide full-stack web application engineering and AI system design.
-
-2. COMPENSATION
-Company shall pay Consultant a fixed fee of ₹45,000 per month, payable within thirty (30) days of invoice submission.
+2. COMPENSATION AND BENEFITS
+Employer agrees to pay Employee a fixed monthly compensation of ₹40,000 (Forty Thousand Indian Rupees), payable on the last business day of each calendar month via direct electronic bank transfer, subject to applicable statutory tax deductions.
 
 3. TERM AND TERMINATION
-This Agreement shall remain in effect for 12 months. Either party may terminate this Agreement without cause upon providing sixty (60) days prior written notice.
+The initial term of this Agreement shall commence on November 1, 2024. Either party may terminate this employment relationship without cause by providing at least thirty (30) days prior written notice to the other party. Employer reserves the right to terminate immediately for cause involving gross misconduct or material breach.
 
-4. NON-COMPETE COVENANT
-Consultant agrees not to engage in competing legal-technology software consulting for a period of six (6) months following termination.
+4. CONFIDENTIALITY OBLIGATIONS
+Employee acknowledges that during employment, Employee will have access to proprietary software codebases, trade secrets, business strategies, and client data. Employee agrees to preserve the strict confidentiality of all proprietary information during employment and for a period of two (2) years following termination of employment.
 
-5. CONFIDENTIALITY
-Both parties agree to hold proprietary information confidential for two (2) years.`;
+5. RESTRICTIVE COVENANTS (POST-TERMINATION NON-COMPETE)
+To protect Employer's legitimate business interests, Employee covenants that for a period of three (3) months following the effective date of termination, Employee shall not directly or indirectly accept employment with, consult for, or provide competing software engineering services to direct commercial competitors in the same geographic territory.
+
+6. DISPUTE RESOLUTION AND ARBITRATION
+Any dispute, claim, or controversy arising out of or relating to this Agreement, its interpretation, or its termination shall be submitted to and resolved by binding confidential arbitration administered in accordance with standard arbitration rules before a single neutral arbitrator in Bangalore. The arbitrator's award shall be final, non-appealable, and binding on both parties.`;
+
+export const SAMPLE_DIFF_DOC_B = `EMPLOYMENT AGREEMENT (VERSION B - REVISED)
+
+This Employment Agreement ("Agreement") is entered into as of October 15, 2024, by and between Novacorp Solutions Private Limited ("Employer"), a fictional software enterprise, and Priya Sen ("Employee").
+
+1. POSITION AND DUTIES
+Employee shall serve in the full-time role of Senior Frontend Engineer, reporting to the Director of Engineering, and shall perform software development, architectural design, and related technical services.
+
+2. COMPENSATION AND BENEFITS
+Employer agrees to pay Employee a fixed monthly compensation of ₹45,000 (Forty-Five Thousand Indian Rupees), payable on the last business day of each calendar month via direct electronic bank transfer, subject to applicable statutory tax deductions.
+
+3. TERM AND TERMINATION
+The initial term of this Agreement shall commence on November 1, 2024. Either party may terminate this employment relationship without cause by providing at least sixty (60) days prior written notice to the other party. Employer reserves the right to terminate immediately for cause involving gross misconduct or material breach.
+
+4. CONFIDENTIALITY OBLIGATIONS
+Employee acknowledges that during employment, Employee will have access to proprietary software codebases, trade secrets, business strategies, and client data. Employee agrees to preserve the strict confidentiality of all proprietary information during employment and for a period of two (2) years following termination of employment.
+
+5. RESTRICTIVE COVENANTS (POST-TERMINATION NON-COMPETE)
+To protect Employer's legitimate business interests, Employee covenants that for a period of six (6) months following the effective date of termination, Employee shall not directly or indirectly accept employment with, consult for, or provide competing software engineering services to direct commercial competitors in the same geographic territory.
+
+6. DISPUTE RESOLUTION AND ARBITRATION
+Any dispute, claim, or controversy arising out of or relating to this Agreement, its interpretation, or its termination shall be submitted to and resolved by binding confidential arbitration administered in accordance with standard arbitration rules before a single neutral arbitrator in Bangalore. The arbitrator's award shall be final, non-appealable, and binding on both parties.`;

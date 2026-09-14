@@ -97,12 +97,12 @@ export function CompareTab({ currentUpload }: CompareTabProps) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             docA: {
-              originalName: 'Zenith_Agreement_v1.0.txt',
+              originalName: 'employment_agreement_v1.txt',
               textContent: customDocA,
               mimeType: 'text/plain',
             },
             docB: {
-              originalName: 'Zenith_Agreement_v2.0_Revised.txt',
+              originalName: 'employment_agreement_v2.txt',
               textContent: customDocB,
               mimeType: 'text/plain',
             },
@@ -489,14 +489,22 @@ export function CompareTab({ currentUpload }: CompareTabProps) {
               Upload an Original Document and a Revised Document above to automatically highlight material changes, rights modifications, deadline extensions, and risk shifts.
             </p>
           </div>
-          <div>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => handleRunComparison(SAMPLE_DIFF_DOC_A, SAMPLE_DIFF_DOC_B)}
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-xs font-bold text-white transition-colors shadow-xs"
+            >
+              <GitCompare className="w-3.5 h-3.5" />
+              <span>Run Live Comparison (v1 vs v2)</span>
+            </button>
             <button
               type="button"
               onClick={() => setComparison(SAMPLE_SMART_COMPARISON)}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-800 transition-colors shadow-xs"
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-800 transition-colors shadow-xs"
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-              <span>Preview Demo Results UI (1-Click)</span>
+              <span>Preview Demo Results UI</span>
             </button>
           </div>
         </div>

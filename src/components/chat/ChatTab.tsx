@@ -44,7 +44,7 @@ export function ChatTab({
 
   const suggestedQuestions = [
     'Can this agreement be terminated early?',
-    'Does this agreement automatically renew?',
+    'Who pays the arbitration fees?',
     'What payment obligations are specified?',
     'Does this agreement provide maternity leave or health insurance?',
   ];
@@ -330,6 +330,7 @@ export function ChatTab({
           <div className="relative flex-1">
             <input
               ref={inputRef}
+              id="ask-question-input"
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
@@ -342,6 +343,7 @@ export function ChatTab({
 
           <button
             type="submit"
+            id="ask-submit-button"
             disabled={isLoading || !inputValue.trim()}
             className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-xs disabled:opacity-50 disabled:cursor-not-allowed shrink-0 focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:outline-none"
             aria-label="Submit question to contract"

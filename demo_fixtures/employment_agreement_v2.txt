@@ -1,0 +1,21 @@
+EMPLOYMENT AGREEMENT (VERSION B - REVISED)
+
+This Employment Agreement ("Agreement") is entered into as of October 15, 2024, by and between Novacorp Solutions Private Limited ("Employer"), a fictional software enterprise, and Priya Sen ("Employee").
+
+1. POSITION AND DUTIES
+Employee shall serve in the full-time role of Senior Frontend Engineer, reporting to the Director of Engineering, and shall perform software development, architectural design, and related technical services.
+
+2. COMPENSATION AND BENEFITS
+Employer agrees to pay Employee a fixed monthly compensation of ₹45,000 (Forty-Five Thousand Indian Rupees), payable on the last business day of each calendar month via direct electronic bank transfer, subject to applicable statutory tax deductions.
+
+3. TERM AND TERMINATION
+The initial term of this Agreement shall commence on November 1, 2024. Either party may terminate this employment relationship without cause by providing at least sixty (60) days prior written notice to the other party. Employer reserves the right to terminate immediately for cause involving gross misconduct or material breach.
+
+4. CONFIDENTIALITY OBLIGATIONS
+Employee acknowledges that during employment, Employee will have access to proprietary software codebases, trade secrets, business strategies, and client data. Employee agrees to preserve the strict confidentiality of all proprietary information during employment and for a period of two (2) years following termination of employment.
+
+5. RESTRICTIVE COVENANTS (POST-TERMINATION NON-COMPETE)
+To protect Employer's legitimate business interests, Employee covenants that for a period of six (6) months following the effective date of termination, Employee shall not directly or indirectly accept employment with, consult for, or provide competing software engineering services to direct commercial competitors in the same geographic territory.
+
+6. DISPUTE RESOLUTION AND ARBITRATION
+Any dispute, claim, or controversy arising out of or relating to this Agreement, its interpretation, or its termination shall be submitted to and resolved by binding confidential arbitration administered in accordance with standard arbitration rules before a single neutral arbitrator in Bangalore. The arbitrator's award shall be final, non-appealable, and binding on both parties.

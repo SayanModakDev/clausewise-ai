@@ -1,0 +1,81 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 2710 >>
+stream
+BT
+/F1 10 Tf
+14 TL
+50 750 Td
+(EMPLOYMENT AGREEMENT \(VERSION A\)) Tj
+T* () Tj
+T* (This Employment Agreement \("Agreement"\) is entered into as of October 15, 2024,) Tj
+T* (by and between Novacorp Solutions Private Limited \("Employer"\), a fictional) Tj
+T* (software enterprise, and Priya Sen \("Employee"\).) Tj
+T* () Tj
+T* (1. POSITION AND DUTIES) Tj
+T* (Employee shall serve in the full-time role of Senior Frontend Engineer,) Tj
+T* (reporting to the Director of Engineering, and shall perform software) Tj
+T* (development, architectural design, and related technical services.) Tj
+T* () Tj
+T* (2. COMPENSATION AND BENEFITS) Tj
+T* (Employer agrees to pay Employee a fixed monthly compensation of ₹40,000 \(Forty) Tj
+T* (Thousand Indian Rupees\), payable on the last business day of each calendar month) Tj
+T* (via direct electronic bank transfer, subject to applicable statutory tax) Tj
+T* (deductions.) Tj
+T* () Tj
+T* (3. TERM AND TERMINATION) Tj
+T* (The initial term of this Agreement shall commence on November 1, 2024. Either) Tj
+T* (party may terminate this employment relationship without cause by providing at) Tj
+T* (least thirty \(30\) days prior written notice to the other party. Employer) Tj
+T* (reserves the right to terminate immediately for cause involving gross misconduct) Tj
+T* (or material breach.) Tj
+T* () Tj
+T* (4. CONFIDENTIALITY OBLIGATIONS) Tj
+T* (Employee acknowledges that during employment, Employee will have access to) Tj
+T* (proprietary software codebases, trade secrets, business strategies, and client) Tj
+T* (data. Employee agrees to preserve the strict confidentiality of all proprietary) Tj
+T* (information during employment and for a period of two \(2\) years following) Tj
+T* (termination of employment.) Tj
+T* () Tj
+T* (5. RESTRICTIVE COVENANTS \(POST-TERMINATION NON-COMPETE\)) Tj
+T* (To protect Employer's legitimate business interests, Employee covenants that for) Tj
+T* (a period of three \(3\) months following the effective date of termination,) Tj
+T* (Employee shall not directly or indirectly accept employment with, consult for,) Tj
+T* (or provide competing software engineering services to direct commercial) Tj
+T* (competitors in the same geographic territory.) Tj
+T* () Tj
+T* (6. DISPUTE RESOLUTION AND ARBITRATION) Tj
+T* (Any dispute, claim, or controversy arising out of or relating to this Agreement,) Tj
+T* (its interpretation, or its termination shall be submitted to and resolved by) Tj
+T* (binding confidential arbitration administered in accordance with standard) Tj
+T* (arbitration rules before a single neutral arbitrator in Bangalore. The) Tj
+T* (arbitrator's award shall be final, non-appealable, and binding on both parties.) Tj
+T* () Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000003002 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+3072
+%%EOF
