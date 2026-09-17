@@ -201,7 +201,7 @@ export function DocumentUploader({
 
               <div>
                 <h3 className="text-lg font-bold text-slate-900">
-                  Analyzing Document with Gemini 3.8 Flash
+                  Analyzing Contract Document
                 </h3>
                 <p className="text-xs text-slate-500 mt-1">
                   Extracting legal provisions with zero hallucinations and strict source grounding.

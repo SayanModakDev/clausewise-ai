@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Scale, Sparkles, Plus, RefreshCw, Tag } from 'lucide-react';
+import { Scale, Plus, RefreshCw, Tag } from 'lucide-react';
+import { AI_MODEL_DISPLAY_LABEL } from '@/lib/constants';
 
 interface NavbarProps {
   currentDocumentName?: string;
@@ -27,9 +28,9 @@ export function Navbar({
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <span className="font-extrabold text-slate-900 text-lg tracking-tight">ClauseWise</span>
-              <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-medium bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200">
-                <Sparkles className="w-3 h-3" />
-                gemini-3.8-flash
+              <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-600 bg-slate-100/90 px-2.5 py-0.5 rounded-full border border-slate-200">
+                <span className="text-blue-500 font-bold text-xs" aria-hidden="true">✦</span>
+                {AI_MODEL_DISPLAY_LABEL}
               </span>
             </div>
             {!currentDocumentName ? (

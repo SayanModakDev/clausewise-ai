@@ -293,7 +293,7 @@ export function ChatTab({
                   Scanning contract and verifying citations...
                 </p>
                 <p className="text-[11px] text-slate-500">
-                  Gemini 3.8 Flash is cross-referencing document sections and enforcing strict absence fallback.
+                  Cross-referencing document sections and enforcing strict absence fallback.
                 </p>
               </div>
             </div>

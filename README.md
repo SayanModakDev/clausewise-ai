@@ -74,8 +74,8 @@ ClauseWise ingests legal PDF or TXT documents, parses them server-side, and prod
 
 ClauseWise AI uses the official Google GenAI SDK (`@google/genai`) to interface with Google's advanced Gemini models:
 
-- **Primary Model:** `gemini-3.8-flash`
-- **Fallback Cascade:** Resilient multi-tier fallback to `gemini-3.7-flash` and `gemini-3.5-flash` with exponential backoff to handle transient API limits during live hackathon demonstrations.
+- **Centralized Model:** `gemini-3.8-flash` across all document analysis, grounded Q&A, and contract comparison routes.
+- **Exponential Backoff Retry:** Resilient exponential backoff retry handler (`withGeminiRetry`) to gracefully absorb transient 503 / 429 / UNAVAILABLE API limits during live evaluation.
 - **Thinking Budget:** Configured with `thinkingConfig: { thinkingBudget: 1024 }` to perform deliberate multi-step legal reasoning before synthesizing structured summaries.
 - **Structured JSON Output:** Native `responseSchema` integration with runtime Zod schema parsing ensures reliable, type-safe responses without regex markdown stripping fragility.
 - **Native Document Processing:** Direct multi-modal document transmission via Gemini Files API for PDFs and text block attachments for plain text files.
@@ -145,13 +145,11 @@ flowchart TD
         MagicBytes[Magic Bytes & Size Validator]
         ZodValidator[Zod Runtime Schema Validation]
         GeminiClient[Gemini Client Module - server-only]
-        RetryFallback[Multi-Model Fallback Cascade & Retry]
+        RetryHandler[Exponential Backoff Retry Handler]
     end
 
     subgraph GeminiService [Google GenAI Cloud Platform]
-        Gemini38["gemini-3.8-flash (Primary with Thinking 1024)"]
-        Gemini37["gemini-3.7-flash (Fallback Tier 1)"]
-        Gemini35["gemini-3.5-flash (Fallback Tier 2)"]
+        Gemini38["gemini-3.8-flash (Thinking Budget 1024)"]
     end
 
     Upload --> API_Analyze
@@ -164,10 +162,7 @@ flowchart TD
     API_Compare --> DocService
     API_Chat --> DocService
 
-    DocService --> GeminiClient --> RetryFallback
-    RetryFallback --> Gemini38
-    RetryFallback -.->|On 429 Quota| Gemini37
-    RetryFallback -.->|On 429 Quota| Gemini35
+    DocService --> GeminiClient --> RetryHandler --> Gemini38
 
     DocService --> ZodValidator --> UI
 ```
