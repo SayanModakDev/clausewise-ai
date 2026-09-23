@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Scale, Plus, RefreshCw, Tag } from 'lucide-react';
+import { Plus, RefreshCw, Tag } from 'lucide-react';
 import { AI_MODEL_DISPLAY_LABEL } from '@/lib/constants';
+import { LogoSymbol } from '@/components/brand/Logo';
 
 interface NavbarProps {
   currentDocumentName?: string;
@@ -22,12 +23,14 @@ export function Navbar({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         {/* Brand */}
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-white shadow-xs shrink-0">
-            <Scale className="w-5 h-5 text-blue-400" />
+          <div className="shrink-0 transition-transform hover:scale-105" title="ClauseWise AI">
+            <LogoSymbol size={40} theme="light" withTile={true} />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="font-extrabold text-slate-900 text-lg tracking-tight">ClauseWise</span>
+              <span className="font-extrabold text-slate-900 text-lg tracking-tight select-none">
+                Clause<span className="text-blue-600">Wise</span>
+              </span>
               <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-600 bg-slate-100/90 px-2.5 py-0.5 rounded-full border border-slate-200">
                 <span className="text-blue-500 font-bold text-xs" aria-hidden="true">✦</span>
                 {AI_MODEL_DISPLAY_LABEL}

@@ -1,5 +1,9 @@
 # ClauseWise AI — Legal Document Navigator
 
+<p align="center">
+  <img src="public/logo.svg" alt="ClauseWise Logo" width="220" />
+</p>
+
 > **Tagline:** Understand the document before you sign it.  
 > **Status:** PromptWars Hackathon Project  
 > **Author:** Sayan Modak

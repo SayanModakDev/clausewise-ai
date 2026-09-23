@@ -9,6 +9,7 @@ import { ClauseInspectorTab } from '@/components/clauses/ClauseInspectorTab';
 import { ChatTab } from '@/components/chat/ChatTab';
 import { CompareTab } from '@/components/compare/CompareTab';
 import { ActionPlanTab } from '@/components/action-plan/ActionPlanTab';
+import { LogoSymbol } from '@/components/brand/Logo';
 import { DocumentAnalysisResult, ProcessedUpload } from '@/lib/types';
 import {
   FileText,
@@ -336,7 +337,10 @@ export function Workspace() {
       <footer className="mt-auto border-t border-slate-200 bg-white py-6 px-4 text-center text-xs text-slate-500 no-print">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-slate-800">ClauseWise AI</span>
+            <LogoSymbol size={20} theme="light" withTile={false} />
+            <span className="font-bold text-slate-800">
+              Clause<span className="text-blue-600">Wise</span> AI
+            </span>
             <span>—</span>
             <span>Understand the document before you sign it.</span>
           </div>

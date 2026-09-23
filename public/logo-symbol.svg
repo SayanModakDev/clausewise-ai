@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none" width="40" height="40">
+  <title>ClauseWise Symbol</title>
+  <desc>AI Legal Document Navigator Icon</desc>
+
+  <rect width="40" height="40" rx="10" fill="#0F172A"/>
+  <rect x="0.5" y="0.5" width="39" height="39" rx="9.5" stroke="#334155" stroke-opacity="0.6"/>
+
+  <!-- Document "C" Spine -->
+  <path d="M26 12H17C14.2386 12 12 14.2386 12 17V23C12 25.7614 14.2386 28 17 28H26" 
+        stroke="url(#cw_sym_blue_grad)" 
+        stroke-width="2.75" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"/>
+
+  <!-- Document Fold Corner -->
+  <path d="M22 8L26.5 12.5H22V8Z" fill="#38BDF8"/>
+
+  <!-- Active Clause Navigation Beam & Chevron Tip -->
+  <path d="M16.5 20H23.5M21 17.5L23.5 20L21 22.5" 
+        stroke="#60A5FA" 
+        stroke-width="2" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"/>
+
+  <defs>
+    <linearGradient id="cw_sym_blue_grad" x1="12" y1="12" x2="26" y2="28" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3B82F6"/>
+      <stop offset="1" stop-color="#1D4ED8"/>
+    </linearGradient>
+  </defs>
+</svg>

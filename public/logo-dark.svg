@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 210 40" fill="none" width="210" height="40">
+  <title>ClauseWise Logo (Dark Theme)</title>
+  <desc>AI-Powered Legal Document Navigator</desc>
+
+  <!-- Symbol Mark: Dark Slate Tile Container -->
+  <g transform="translate(0, 0)">
+    <rect width="40" height="40" rx="10" fill="#1E293B"/>
+    <rect x="0.5" y="0.5" width="39" height="39" rx="9.5" stroke="#334155"/>
+
+    <!-- Document "C" Spine -->
+    <path d="M26 12H17C14.2386 12 12 14.2386 12 17V23C12 25.7614 14.2386 28 17 28H26" 
+          stroke="#60A5FA" 
+          stroke-width="2.75" 
+          stroke-linecap="round" 
+          stroke-linejoin="round"/>
+
+    <!-- Document Fold Corner -->
+    <path d="M22 8L26.5 12.5H22V8Z" fill="#38BDF8"/>
+
+    <!-- Active Clause Navigation Beam & Forward Direction Guide -->
+    <path d="M16.5 20H23.5M21 17.5L23.5 20L21 22.5" 
+          stroke="#93C5FD" 
+          stroke-width="2" 
+          stroke-linecap="round" 
+          stroke-linejoin="round"/>
+  </g>
+
+  <!-- Wordmark: White + Sky Blue for Dark Surfaces -->
+  <g transform="translate(52, 0)">
+    <text x="0" y="27" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, sans-serif" font-size="21" font-weight="800" fill="#FFFFFF" letter-spacing="-0.035em">Clause<tspan fill="#60A5FA">Wise</tspan></text>
+  </g>
+</svg>

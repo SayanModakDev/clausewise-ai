@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 32" fill="none" width="160" height="32">
+  <title>ClauseWise Compact Logo (Dark Theme)</title>
+
+  <!-- Compact Tile (Dark) -->
+  <g transform="translate(0, 0)">
+    <rect width="32" height="32" rx="8" fill="#1E293B"/>
+    <rect x="0.5" y="0.5" width="31" height="31" rx="7.5" stroke="#334155"/>
+
+    <path d="M21 9.5H13.5C11.2909 9.5 9.5 11.2909 9.5 13.5V18.5C9.5 20.7091 11.2909 22.5 13.5 22.5H21" 
+          stroke="#60A5FA" 
+          stroke-width="2.4" 
+          stroke-linecap="round" 
+          stroke-linejoin="round"/>
+    <path d="M17.5 6.5L21 10H17.5V6.5Z" fill="#38BDF8"/>
+    <path d="M13 16H18.5M16.5 14L18.5 16L16.5 18" 
+          stroke="#93C5FD" 
+          stroke-width="1.8" 
+          stroke-linecap="round" 
+          stroke-linejoin="round"/>
+  </g>
+
+  <!-- Compact Wordmark (Dark) -->
+  <g transform="translate(42, 0)">
+    <text x="0" y="22" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, sans-serif" font-size="17" font-weight="800" fill="#FFFFFF" letter-spacing="-0.035em">Clause<tspan fill="#60A5FA">Wise</tspan></text>
+  </g>
+</svg>
