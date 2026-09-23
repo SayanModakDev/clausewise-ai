@@ -1,5 +1,5 @@
 import 'server-only';
-import { ai, GEMINI_MODEL, GEMINI_CONFIG, withGeminiRetry } from './gemini';
+import { ai, executeWithModelFallback, withGeminiRetry, classifyGeminiError } from './gemini';
 import {
   LEGAL_GUARDRAILS_SYSTEM_INSTRUCTION,
   DOCUMENT_ANALYSIS_PROMPT,
@@ -152,10 +152,11 @@ function inferClauseCategory(title: string, text: string): ClauseCategory {
 }
 
 /**
- * Performs full legal analysis of a document using Gemini 3.8 Flash structured output.
+ * Performs full legal analysis of a document using Gemini structured output with resilience fallback.
  */
 export async function analyzeDocument(
-  upload: ProcessedUpload
+  upload: ProcessedUpload,
+  options?: { signal?: AbortSignal }
 ): Promise<DocumentAnalysisResult> {
   const contents: unknown[] = [];
 
@@ -174,19 +175,51 @@ export async function analyzeDocument(
 
   contents.push({ text: DOCUMENT_ANALYSIS_PROMPT });
 
-  const response = await withGeminiRetry(async () => {
-    return await ai.models.generateContent({
-      model: GEMINI_MODEL,
-      contents: contents as GenerateContentParamContents,
-      config: {
-        systemInstruction: LEGAL_GUARDRAILS_SYSTEM_INSTRUCTION,
-        responseMimeType: 'application/json',
-        responseSchema: GEMINI_DOCUMENT_ANALYSIS_SCHEMA as ResponseSchemaParam,
-        temperature: GEMINI_CONFIG.temperature,
-        thinkingConfig: GEMINI_CONFIG.thinkingConfig,
-      },
-    });
-  });
+  const response = await executeWithModelFallback(
+    async (model, config, signal) => {
+      const useNativeSchema = !model.includes('lite');
+      try {
+        return await ai.models.generateContent({
+          model,
+          contents: contents as GenerateContentParamContents,
+          config: {
+            systemInstruction: LEGAL_GUARDRAILS_SYSTEM_INSTRUCTION,
+            responseMimeType: 'application/json',
+            ...(useNativeSchema ? { responseSchema: GEMINI_DOCUMENT_ANALYSIS_SCHEMA as ResponseSchemaParam } : {}),
+            temperature: config.temperature,
+            ...(config.thinkingConfig ? { thinkingConfig: config.thinkingConfig } : {}),
+            abortSignal: signal,
+          },
+        });
+      } catch (err: unknown) {
+        const classified = classifyGeminiError(err);
+        // If native schema compilation triggered 503 or 400 grammar/schema failure,
+        // retry immediately with JSON mode within the same model attempt
+        if (useNativeSchema && (classified.isUnavailable || classified.status === 400)) {
+          console.warn(
+            `[Gemini] Grammar schema compilation failed on ${model} (HTTP ${classified.status}). Retrying with JSON mode...`
+          );
+          return await ai.models.generateContent({
+            model,
+            contents: contents as GenerateContentParamContents,
+            config: {
+              systemInstruction: LEGAL_GUARDRAILS_SYSTEM_INSTRUCTION,
+              responseMimeType: 'application/json',
+              temperature: config.temperature,
+              ...(config.thinkingConfig ? { thinkingConfig: config.thinkingConfig } : {}),
+              abortSignal: signal,
+            },
+          });
+        }
+        throw err;
+      }
+    },
+    {
+      overallBudgetMs: 55_000,
+      operationName: 'document analysis',
+      signal: options?.signal,
+    }
+  );
 
   const responseText = response.text || '{}';
   let parsedJson: unknown;
@@ -310,12 +343,13 @@ export async function analyzeDocument(
 }
 
 /**
- * Answers a document-grounded question using Gemini 3.8 Flash.
+ * Answers a document-grounded question using Gemini with resilience fallback.
  */
 export async function askDocumentQuestion(
   upload: { fileUri?: string; mimeType: string; textContent?: string },
   question: string,
-  history: Array<{ role: 'user' | 'assistant'; content: string }> = []
+  history: Array<{ role: 'user' | 'assistant'; content: string }> = [],
+  options?: { signal?: AbortSignal }
 ): Promise<{ answer: string; citations: ChatCitation[] }> {
   const contents: unknown[] = [];
 
@@ -344,17 +378,25 @@ export async function askDocumentQuestion(
     text: `USER QUESTION:\n"${question}"\n\nProvide an answer formatted in JSON with the structure: { "answer": string, "citations": [{ "clauseTitle": string, "sourceQuote": string }] }. If not mentioned in the document, set answer to "This information is not specified in the provided document." and citations to [].`,
   });
 
-  const response = await withGeminiRetry(async () => {
-    return await ai.models.generateContent({
-      model: GEMINI_MODEL,
-      contents: contents as GenerateContentParamContents,
-      config: {
-        systemInstruction: DOCUMENT_QA_SYSTEM_PROMPT,
-        responseMimeType: 'application/json',
-        temperature: GEMINI_CONFIG.temperature,
-      },
-    });
-  });
+  const response = await executeWithModelFallback(
+    async (model, config, signal) => {
+      return await ai.models.generateContent({
+        model,
+        contents: contents as GenerateContentParamContents,
+        config: {
+          systemInstruction: DOCUMENT_QA_SYSTEM_PROMPT,
+          responseMimeType: 'application/json',
+          temperature: config.temperature,
+          abortSignal: signal,
+        },
+      });
+    },
+    {
+      overallBudgetMs: 30_000,
+      operationName: 'document Q&A',
+      signal: options?.signal,
+    }
+  );
 
   const responseText = response.text || '{}';
   try {
@@ -381,7 +423,8 @@ export async function askDocumentQuestion(
 export async function askDocumentGroundedQuestion(
   upload: { fileUri?: string; mimeType: string; textContent?: string },
   question: string,
-  history: Array<{ role: 'user' | 'assistant'; content: string }> = []
+  history: Array<{ role: 'user' | 'assistant'; content: string }> = [],
+  options?: { signal?: AbortSignal }
 ): Promise<AskDocumentResponse> {
   const contents: unknown[] = [];
 
@@ -422,19 +465,27 @@ Analyze the document for this specific question.
   * Set supportingText to null.`,
   });
 
-  const response = await withGeminiRetry(async () => {
-    return await ai.models.generateContent({
-      model: GEMINI_MODEL,
-      contents: contents as GenerateContentParamContents,
-      config: {
-        systemInstruction: DOCUMENT_ASK_SYSTEM_PROMPT,
-        responseMimeType: 'application/json',
-        responseSchema: GEMINI_ASK_RESPONSE_SCHEMA as ResponseSchemaParam,
-        temperature: GEMINI_CONFIG.temperature,
-        thinkingConfig: GEMINI_CONFIG.thinkingConfig,
-      },
-    });
-  });
+  const response = await executeWithModelFallback(
+    async (model, config, signal) => {
+      return await ai.models.generateContent({
+        model,
+        contents: contents as GenerateContentParamContents,
+        config: {
+          systemInstruction: DOCUMENT_ASK_SYSTEM_PROMPT,
+          responseMimeType: 'application/json',
+          responseSchema: GEMINI_ASK_RESPONSE_SCHEMA as ResponseSchemaParam,
+          temperature: config.temperature,
+          ...(config.thinkingConfig ? { thinkingConfig: config.thinkingConfig } : {}),
+          abortSignal: signal,
+        },
+      });
+    },
+    {
+      overallBudgetMs: 30_000,
+      operationName: 'document-grounded Q&A',
+      signal: options?.signal,
+    }
+  );
 
   const responseText = response.text || '{}';
   let parsed: unknown;
@@ -476,7 +527,8 @@ Analyze the document for this specific question.
  */
 export async function compareDocuments(
   docA: ProcessedUpload,
-  docB: ProcessedUpload
+  docB: ProcessedUpload,
+  options?: { signal?: AbortSignal }
 ): Promise<SmartComparisonResult> {
   const contents: unknown[] = [];
 
@@ -498,19 +550,27 @@ export async function compareDocuments(
 
   contents.push({ text: DOCUMENT_COMPARISON_PROMPT });
 
-  const response = await withGeminiRetry(async () => {
-    return await ai.models.generateContent({
-      model: GEMINI_MODEL,
-      contents: contents as GenerateContentParamContents,
-      config: {
-        systemInstruction: LEGAL_GUARDRAILS_SYSTEM_INSTRUCTION,
-        responseMimeType: 'application/json',
-        responseSchema: GEMINI_SMART_COMPARISON_SCHEMA as ResponseSchemaParam,
-        temperature: GEMINI_CONFIG.temperature,
-        thinkingConfig: GEMINI_CONFIG.thinkingConfig,
-      },
-    });
-  });
+  const response = await executeWithModelFallback(
+    async (model, config, signal) => {
+      return await ai.models.generateContent({
+        model,
+        contents: contents as GenerateContentParamContents,
+        config: {
+          systemInstruction: LEGAL_GUARDRAILS_SYSTEM_INSTRUCTION,
+          responseMimeType: 'application/json',
+          responseSchema: GEMINI_SMART_COMPARISON_SCHEMA as ResponseSchemaParam,
+          temperature: config.temperature,
+          ...(config.thinkingConfig ? { thinkingConfig: config.thinkingConfig } : {}),
+          abortSignal: signal,
+        },
+      });
+    },
+    {
+      overallBudgetMs: 52_000,
+      operationName: 'document comparison',
+      signal: options?.signal,
+    }
+  );
 
   const responseText = response.text || '{}';
   let parsed: unknown;

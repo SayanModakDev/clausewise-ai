@@ -80,8 +80,8 @@ export async function POST(req: NextRequest) {
     // Process file (Gemini Files API upload for PDF or in-memory text extraction)
     const processed = await processUploadedFile(file);
 
-    // Run structured legal analysis via Gemini 3.8 Flash
-    const analysisResult = await analyzeDocument(processed);
+    // Run structured legal analysis via Gemini with automatic fallback
+    const analysisResult = await analyzeDocument(processed, { signal: req.signal });
 
     return NextResponse.json({
       success: true,
@@ -121,13 +121,20 @@ export async function POST(req: NextRequest) {
     } else if (
       rawMessage.includes('503') ||
       rawMessage.includes('high demand') ||
-      rawMessage.includes('UNAVAILABLE')
+      rawMessage.includes('UNAVAILABLE') ||
+      rawMessage.includes('Service Unavailable')
     ) {
-      userMessage = 'The AI legal analysis engine is currently experiencing high demand. Please try again in a few moments.';
+      userMessage = 'AI analysis is temporarily unavailable. Please try again shortly.';
       statusCode = 503;
+    } else if (rawMessage.includes('RESOURCE_EXHAUSTED') || rawMessage.includes('429')) {
+      userMessage = 'The AI engine is currently experiencing high demand. Please try again shortly.';
+      statusCode = 429;
     } else if (rawMessage.includes('API key') || rawMessage.includes('GEMINI_API_KEY')) {
       userMessage = 'Gemini service authentication error. Please contact the administrator.';
       statusCode = 500;
+    } else if (rawMessage.includes('aborted') || req.signal?.aborted) {
+      userMessage = 'Document analysis request was cancelled.';
+      statusCode = 499;
     }
 
     return NextResponse.json(

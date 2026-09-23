@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
       };
     }
 
-    const comparison = await compareDocuments(uploadA, uploadB);
+    const comparison = await compareDocuments(uploadA, uploadB, { signal: req.signal });
 
     return NextResponse.json({
       success: true,
@@ -84,12 +84,23 @@ export async function POST(req: NextRequest) {
     ) {
       userMessage = rawMessage;
       statusCode = 400;
+    } else if (
+      rawMessage.includes('503') ||
+      rawMessage.includes('high demand') ||
+      rawMessage.includes('UNAVAILABLE') ||
+      rawMessage.includes('Service Unavailable')
+    ) {
+      userMessage = 'AI document comparison is temporarily unavailable. Please try again shortly.';
+      statusCode = 503;
     } else if (rawMessage.includes('RESOURCE_EXHAUSTED') || rawMessage.includes('429')) {
       userMessage = 'The AI comparison engine is currently experiencing high demand. Please try again in a few moments.';
       statusCode = 429;
     } else if (rawMessage.includes('API key') || rawMessage.includes('GEMINI_API_KEY')) {
       userMessage = 'AI service authentication error. Please contact the administrator.';
       statusCode = 500;
+    } else if (rawMessage.includes('aborted') || req.signal?.aborted) {
+      userMessage = 'Document comparison request was cancelled.';
+      statusCode = 499;
     }
 
     return NextResponse.json({ error: userMessage }, { status: statusCode });

@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "npx tsx -r ./test/setup.js --test src/server/__tests__/*.test.ts"
   },
   "dependencies": {
     "@google/genai": "^2.22.0",

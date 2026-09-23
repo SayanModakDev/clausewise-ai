@@ -34,8 +34,30 @@ CRITICAL RESPONSIBLE LEGAL AI MANDATES (NON-NEGOTIABLE):
 
 export const DOCUMENT_ANALYSIS_PROMPT = `
 Analyze the provided legal document thoroughly.
-Provide a complete, document-grounded legal analysis conforming strictly to the requested schema:
+Provide a complete, document-grounded legal analysis conforming strictly to the requested schema.
+Return ONLY a valid JSON object matching the following structure:
+{
+  "documentType": "string",
+  "summary": "string",
+  "parties": ["Party Name (Role)"],
+  "importantDates": [{"label": "string", "value": "exact verbatim date/duration", "source": "section or null"}],
+  "financialTerms": [{"label": "string", "value": "exact verbatim dollar/percentage", "source": "section or null"}],
+  "obligations": [{"party": "string", "obligation": "string", "source": "section or null"}],
+  "clauses": [
+    {
+      "title": "string",
+      "source": "section or null",
+      "originalText": "exact verbatim excerpt",
+      "plainLanguage": "plain-English explanation",
+      "attentionLevel": "INFORMATIONAL" | "IMPORTANT" | "REVIEW",
+      "whyItMatters": "string"
+    }
+  ],
+  "itemsToClarify": ["string"],
+  "questionsForProfessional": ["string"]
+}
 
+FIELD REQUIREMENTS:
 1. documentType: Clear classification of the agreement (e.g., "Non-Disclosure Agreement", "Independent Consulting Agreement", "Employment Contract").
 2. summary: Plain-language executive summary explaining the purpose, scope, and key commitments.
 3. parties: Contracting parties with their identified roles (e.g., "Apex Ventures Inc. (Company)", "Alex Mercer (Consultant)").
