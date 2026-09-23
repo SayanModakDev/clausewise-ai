@@ -72,11 +72,11 @@ ClauseWise ingests legal PDF or TXT documents, parses them server-side, and prod
 
 ## How GenAI Is Used
 
-ClauseWise AI uses the official Google GenAI SDK (`@google/genai`) to interface with Google's advanced Gemini models:
+ClauseWise AI is **Powered by Gemini**, using the official Google GenAI SDK (`@google/genai`). ClauseWise AI uses Gemini to simplify legal documents, identify important clauses, answer document-grounded questions, and compare agreements:
 
-- **Centralized Model:** `gemini-3.8-flash` across all document analysis, grounded Q&A, and contract comparison routes.
+- **Centralized AI Integration:** Powered by Gemini across all document analysis, grounded Q&A, and contract comparison routes.
 - **Exponential Backoff Retry:** Resilient exponential backoff retry handler (`withGeminiRetry`) to gracefully absorb transient 503 / 429 / UNAVAILABLE API limits during live evaluation.
-- **Thinking Budget:** Configured with `thinkingConfig: { thinkingBudget: 1024 }` to perform deliberate multi-step legal reasoning before synthesizing structured summaries.
+- **Thinking Budget:** Configured with deliberate thinking budgets to perform multi-step legal reasoning before synthesizing structured summaries.
 - **Structured JSON Output:** Native `responseSchema` integration with runtime Zod schema parsing ensures reliable, type-safe responses without regex markdown stripping fragility.
 - **Native Document Processing:** Direct multi-modal document transmission via Gemini Files API for PDFs and text block attachments for plain text files.
 
@@ -149,7 +149,7 @@ flowchart TD
     end
 
     subgraph GeminiService [Google GenAI Cloud Platform]
-        Gemini38["gemini-3.8-flash (Thinking Budget 1024)"]
+        GeminiNode["Google Gemini API (Thinking & Structured Output)"]
     end
 
     Upload --> API_Analyze
@@ -162,7 +162,7 @@ flowchart TD
     API_Compare --> DocService
     API_Chat --> DocService
 
-    DocService --> GeminiClient --> RetryHandler --> Gemini38
+    DocService --> GeminiClient --> RetryHandler --> GeminiNode
 
     DocService --> ZodValidator --> UI
 ```
@@ -176,7 +176,7 @@ flowchart TD
 | **Framework** | Next.js 16 (App Router) | High-performance React 19 server/client architecture with built-in route handlers. |
 | **Language** | TypeScript 5 | Strict end-to-end type safety across schemas, API payloads, and components. |
 | **Styling** | Tailwind CSS v4 | High-performance, clean SaaS styling without heavy component library overhead. |
-| **GenAI SDK** | `@google/genai` (v2.22.0) | Official Google GenAI SDK with native support for Gemini 3.8/3.7/3.5 models and thinking budgets. |
+| **AI** | Google Gemini API | Powered by Gemini using the official `@google/genai` SDK with native support for structured JSON outputs, thinking budgets, and document analysis. |
 | **Validation** | Zod (v4) | Runtime schema validation for API inputs and structured Gemini JSON responses. |
 | **Icons** | Lucide React | Crisp, accessible iconography. |
 | **Storage / DB** | Stateless (Zero Database) | Ephemeral processing ensures zero credential, document, or state leakages. |
