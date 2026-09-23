@@ -53,7 +53,7 @@ export function DocumentUploader({
     }
   }, [selectedFile]);
 
-  // Progressive loading step animation during Gemini 3.8 Flash analysis
+  // Progressive loading step animation during Gemini analysis
   useEffect(() => {
     if (!isAnalyzing) return;
 

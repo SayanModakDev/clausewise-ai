@@ -28,7 +28,7 @@ export interface LegalClause {
 }
 
 /**
- * Structured document-grounded legal analysis output from Gemini 3.8 Flash
+ * Structured document-grounded legal analysis output from Gemini
  */
 export interface DocumentAnalysisData {
   documentType: string;
